@@ -222,6 +222,16 @@ def predict():
         import traceback; traceback.print_exc()
         return jsonify({'status': 'error', 'message': str(e)}), 400
 
+@app.route('/model-status')
+def model_status():
+    try:
+        from xgboost import XGBClassifier
+        m = XGBClassifier()
+        m.load_model("best_model.json")
+        return {"status": "XGBoost loaded OK"}
+    except Exception as e:
+        return {"status": "FAILED", "error": str(e)}
+
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
