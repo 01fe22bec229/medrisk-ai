@@ -148,6 +148,58 @@ def debug_full():
     return jsonify(result)
 
 
+
+# ── GENERATE RISK FACTORS ─────────────────────────────────────────────────────
+def generate_factors(form_data):
+    factors = []
+    pss = int(form_data.get("C15_PSS4_Total") or 0)
+    if pss >= 11:
+        factors.append(f"High stress level (PSS-4 score {pss})")
+    elif pss >= 6:
+        factors.append(f"Moderate stress level (PSS-4 score {pss})")
+
+    freq = str(form_data.get("B10_Frequency_SelfMed") or "")
+    if freq == "Daily":
+        factors.append("Daily self-medication pattern")
+    elif freq == "Weekly":
+        factors.append("Weekly self-medication pattern")
+
+    dur = str(form_data.get("B8_Duration_Without_Doctor") or "")
+    if dur == ">5 days":
+        factors.append("Self-medicating >5 days without doctor")
+    elif dur == "3-5 days":
+        factors.append("Self-medicating 3-5 days without doctor")
+
+    atb = str(form_data.get("B13_Antibiotic_Course_Completion") or "")
+    if "No" in atb or "early" in atb.lower():
+        factors.append("Incomplete antibiotic course")
+
+    if str(form_data.get("D26_Experienced_ADR") or "") == "Yes":
+        factors.append("Adverse drug reaction history")
+
+    if str(form_data.get("C20_Social_Media_Med_Decisions") or "") == "Yes":
+        factors.append("Social media influences medication decisions")
+
+    if str(form_data.get("E34_Online_Purchase_No_Rx") or "") == "Yes":
+        factors.append("Online medicine purchase without prescription")
+
+    if str(form_data.get("C19_Peer_Influence") or "") == "Yes used":
+        factors.append("Acts on peer medication advice")
+
+    if str(form_data.get("C18_SelfMed_For_Sleep") or "") == "Yes":
+        factors.append("Self-medicates for sleep")
+
+    if str(form_data.get("C17_SelfMed_For_Stress_Anxiety") or "") == "Yes":
+        factors.append("Self-medicates for stress or anxiety")
+
+    if str(form_data.get("B16_Source_Check_Frequency") or "") == "Never":
+        factors.append("Never checks reliable information sources")
+
+    if not factors:
+        factors.append("No major individual risk factors identified")
+
+    return factors
+
 # ── GENERATE INSIGHTS & RECOMMENDATIONS ───────────────────────────────────────
 def generate_insights(form_data, label):
     insights = []
@@ -326,6 +378,7 @@ def predict():
             method = 'Rule-Based Fallback (model not loaded)'
 
         insights, recommendations = generate_insights(form_data, pred_label)
+        factors = generate_factors(form_data)
 
         return jsonify({
             'status':          'success',
@@ -333,6 +386,7 @@ def predict():
             'risk_score':      risk_score,
             'probs':           probs_dict,
             'confidence':      max(probs_dict.values()),
+            'factors':         factors,
             'insights':        insights,
             'recommendations': recommendations,
             'method':          method
