@@ -1,0 +1,2178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MedRisk AI — Self-Medication Survey</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --bg:#F0F4F8;
+  --surface:#FFFFFF;
+  --surface2:#F7FAFB;
+  --teal:#009E8E;
+  --teal-light:#E6F7F5;
+  --teal-mid:rgba(0,158,142,0.18);
+  --blue:#3B82F6;
+  --amber:#D97706;
+  --rose:#DC2626;
+  --emerald:#059669;
+  --violet:#7C3AED;
+  --text:#1A2332;
+  --text2:#374151;
+  --slate:#6B7280;
+  --border:#D1D9E0;
+  --border-light:#E8EDF2;
+  --serif:'DM Serif Display',serif;
+  --sans:'DM Sans',sans-serif;
+  --mono:'JetBrains Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:var(--sans);min-height:100vh;
+}
+
+/* ── HEADER ── */
+.header{text-align:center;padding:40px 24px 0;max-width:720px;margin:0 auto;}
+.logo-chip{
+  display:inline-flex;align-items:center;gap:10px;
+  background:var(--teal-light);border:1px solid rgba(0,158,142,0.3);
+  border-radius:40px;padding:7px 18px;
+  font-family:var(--mono);font-size:0.72rem;color:var(--teal);
+  letter-spacing:0.1em;margin-bottom:18px;
+}
+.logo-chip .dot{width:6px;height:6px;border-radius:50%;background:var(--teal);animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+.header h1{font-family:var(--serif);font-size:1.9rem;line-height:1.22;margin-bottom:10px;color:var(--text);}
+.header h1 span{color:var(--teal);}
+.header p{color:var(--slate);font-size:0.88rem;line-height:1.65;max-width:580px;margin:0 auto 10px;}
+.anon-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(5,150,105,0.08);border:1px solid rgba(5,150,105,0.22);
+  border-radius:20px;padding:5px 14px;font-size:0.75rem;color:var(--emerald);margin-top:6px;
+}
+
+/* ── RESEARCHER TOPBAR ── */
+.researcher-bar{max-width:720px;margin:20px auto 0;padding:0 24px;}
+.researcher-btn{
+  display:flex;align-items:center;gap:10px;
+  background:rgba(124,58,237,0.07);border:1px solid rgba(124,58,237,0.2);
+  border-radius:12px;padding:11px 18px;cursor:pointer;
+  font-size:0.82rem;color:#7C3AED;
+  transition:background .2s;width:100%;text-align:left;
+}
+.researcher-btn:hover{background:rgba(124,58,237,0.13);}
+.researcher-btn b{color:var(--text);}
+
+/* ── PROGRESS ── */
+.progress-shell{max-width:720px;margin:20px auto 0;padding:0 24px;}
+.progress-info{display:flex;justify-content:space-between;margin-bottom:8px;}
+.progress-info span{font-family:var(--mono);font-size:0.72rem;color:var(--slate);}
+.progress-info b{color:var(--teal);}
+.progress-track{height:6px;background:var(--border-light);border-radius:3px;overflow:hidden;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--teal),var(--blue));border-radius:3px;transition:width 0.5s cubic-bezier(.4,0,.2,1);}
+
+/* ── FORM ── */
+.form-wrap{max-width:720px;margin:20px auto 60px;padding:0 24px;}
+.section-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:18px;padding:28px;margin-bottom:16px;display:none;
+  box-shadow:0 2px 12px rgba(0,0,0,0.06);
+}
+.section-card.active{display:block;animation:fadeUp .3s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+.section-head{
+  display:flex;align-items:center;gap:12px;margin-bottom:24px;
+  padding-bottom:16px;border-bottom:1px solid var(--border-light);
+}
+.section-icon{
+  width:40px;height:40px;flex-shrink:0;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;font-size:1.1rem;
+}
+.ic-a{background:linear-gradient(135deg,rgba(0,158,142,0.15),rgba(0,158,142,0.05));border:1px solid rgba(0,158,142,0.25);}
+.ic-b{background:linear-gradient(135deg,rgba(59,130,246,0.15),rgba(59,130,246,0.05));border:1px solid rgba(59,130,246,0.25);}
+.ic-c{background:linear-gradient(135deg,rgba(217,119,6,0.15),rgba(217,119,6,0.05));border:1px solid rgba(217,119,6,0.25);}
+.ic-d{background:linear-gradient(135deg,rgba(220,38,38,0.13),rgba(220,38,38,0.04));border:1px solid rgba(220,38,38,0.22);}
+.ic-e{background:linear-gradient(135deg,rgba(124,58,237,0.13),rgba(124,58,237,0.04));border:1px solid rgba(124,58,237,0.22);}
+.section-label{font-family:var(--mono);font-size:0.68rem;color:var(--slate);letter-spacing:0.1em;text-transform:uppercase;}
+.section-title{font-family:var(--serif);font-size:1.05rem;color:var(--text);}
+
+/* ── QUESTIONS ── */
+.q-block{margin-bottom:24px;}
+.q-block:last-child{margin-bottom:0;}
+.q-num{font-family:var(--mono);font-size:0.68rem;color:var(--teal);letter-spacing:0.08em;margin-bottom:5px;font-weight:500;}
+.q-text{font-size:0.92rem;font-weight:600;line-height:1.5;margin-bottom:10px;color:var(--text);}
+.q-hint{font-size:0.78rem;color:var(--slate);margin-bottom:10px;font-style:italic;}
+.required{color:var(--rose);margin-left:3px;}
+
+/* PSS-4 SCALE */
+.pss-table{width:100%;border-collapse:collapse;margin-top:4px;}
+.pss-table thead tr{background:var(--surface2);}
+.pss-table th{padding:10px 8px;font-size:0.72rem;font-family:var(--mono);color:var(--slate);text-transform:uppercase;letter-spacing:0.06em;border:1px solid var(--border-light);text-align:center;}
+.pss-table th:first-child{text-align:left;width:55%;}
+.pss-table td{padding:12px 8px;border:1px solid var(--border-light);vertical-align:middle;}
+.pss-table td:first-child{font-size:0.88rem;color:var(--text2);line-height:1.4;}
+.pss-table tr:nth-child(even){background:var(--surface2);}
+.pss-table tr:hover{background:var(--teal-light);}
+.pss-radio-cell{text-align:center;}
+.pss-radio-wrap{display:flex;justify-content:center;}
+.pss-opt{
+  width:36px;height:36px;border-radius:50%;border:2px solid var(--border);
+  background:var(--surface);cursor:pointer;font-size:0.82rem;font-weight:600;
+  display:flex;align-items:center;justify-content:center;transition:all .15s;
+  color:var(--slate);user-select:none;
+}
+.pss-opt:hover{border-color:var(--teal);color:var(--teal);background:var(--teal-light);}
+.pss-opt.selected{background:var(--teal);border-color:var(--teal);color:#fff;}
+.pss-score-bar{
+  display:flex;align-items:center;gap:12px;margin-top:14px;
+  background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px 18px;
+}
+.pss-score-label{font-family:var(--mono);font-size:0.72rem;color:var(--slate);}
+.pss-score-val{font-family:var(--mono);font-size:1.1rem;font-weight:700;color:var(--teal);}
+.pss-score-denom{font-family:var(--mono);font-size:0.9rem;color:var(--slate);}
+.pss-bands{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap;}
+.pss-band{font-size:0.72rem;padding:4px 10px;border-radius:8px;font-family:var(--mono);}
+.band-low{background:rgba(5,150,105,0.1);border:1px solid rgba(5,150,105,0.25);color:var(--emerald);}
+.band-mod{background:rgba(217,119,6,0.1);border:1px solid rgba(217,119,6,0.25);color:var(--amber);}
+.band-high{background:rgba(220,38,38,0.1);border:1px solid rgba(220,38,38,0.25);color:var(--rose);}
+
+/* LIKERT */
+.likert-wrap{display:flex;flex-direction:column;gap:10px;}
+.likert-row{
+  display:flex;align-items:center;gap:10px;
+  background:var(--surface2);border:1px solid var(--border-light);
+  border-radius:10px;padding:12px 14px;
+}
+.likert-label{font-size:0.86rem;color:var(--text2);flex:1;line-height:1.4;}
+.likert-opts{display:flex;gap:6px;flex-shrink:0;}
+.likert-opt{
+  width:34px;height:34px;border-radius:8px;border:1.5px solid var(--border);
+  background:var(--surface);cursor:pointer;font-size:0.78rem;font-weight:600;
+  display:flex;align-items:center;justify-content:center;transition:all .15s;
+  color:var(--slate);user-select:none;flex-shrink:0;
+}
+.likert-opt:hover{border-color:var(--teal);color:var(--teal);background:var(--teal-light);}
+.likert-opt.selected{background:var(--teal);border-color:var(--teal);color:#fff;}
+.likert-legend{display:flex;justify-content:space-between;font-size:0.7rem;color:var(--slate);margin-top:4px;padding:0 4px;font-style:italic;}
+
+/* TEXT INPUT */
+.text-input{
+  width:100%;background:var(--surface);
+  border:1.5px solid var(--border);border-radius:10px;
+  padding:12px 16px;color:var(--text);
+  font-family:var(--mono);font-size:0.9rem;
+  outline:none;transition:border-color .2s,box-shadow .2s;
+  letter-spacing:0.04em;
+}
+.text-input:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(0,158,142,0.1);}
+.text-input::placeholder{color:#9CA3AF;font-family:var(--sans);letter-spacing:0;}
+
+/* PILLS */
+.options-grid{display:flex;flex-wrap:wrap;gap:7px;}
+.opt-pill{
+  display:flex;align-items:center;gap:8px;
+  padding:9px 16px;border-radius:22px;
+  border:1.5px solid var(--border);background:var(--surface);
+  cursor:pointer;font-size:0.84rem;transition:all .15s;user-select:none;line-height:1.3;
+  color:var(--text2);
+}
+.opt-pill:hover{border-color:var(--teal);background:var(--teal-light);color:var(--teal);}
+.opt-pill.selected{background:var(--teal-light);border-color:var(--teal);color:var(--teal);font-weight:500;}
+.opt-pill input{display:none;}
+.opt-pill .ind{
+  width:16px;height:16px;border-radius:50%;flex-shrink:0;
+  border:2px solid var(--border);transition:all .15s;
+  display:flex;align-items:center;justify-content:center;
+}
+.opt-pill.selected .ind{border-color:var(--teal);background:var(--teal);}
+.opt-pill .ind::after{content:'✓';font-size:9px;color:#fff;display:none;}
+.opt-pill.selected .ind::after{display:block;}
+.opt-pill.cb .ind{border-radius:4px;}
+
+/* sub-question */
+.sub-q{
+  margin-top:12px;margin-left:20px;padding:14px 16px;
+  background:var(--teal-light);border:1px solid rgba(0,158,142,0.2);
+  border-radius:12px;display:none;
+}
+.sub-q.show{display:block;animation:fadeUp .2s ease;}
+.sub-q .q-text{font-size:0.86rem;margin-bottom:8px;color:var(--text);}
+
+/* specify input */
+input.specify{
+  width:100%;background:var(--surface);
+  border:1.5px solid var(--border);border-radius:10px;
+  padding:10px 14px;color:var(--text);
+  font-family:var(--sans);font-size:0.875rem;
+  outline:none;transition:border-color .2s;
+}
+input.specify:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(0,158,142,0.1);}
+input.specify::placeholder{color:#9CA3AF;}
+
+/* errors */
+.err-msg{display:none;font-size:0.75rem;color:var(--rose);margin-top:6px;font-family:var(--mono);}
+.q-block.has-error .err-msg{display:block;}
+.q-block.has-error .opt-pill:not(.selected){border-color:rgba(220,38,38,0.3);}
+.q-block.has-error .text-input{border-color:rgba(220,38,38,0.5);}
+
+/* nav */
+.nav-row{display:flex;align-items:center;justify-content:space-between;margin-top:22px;flex-wrap:wrap;gap:10px;}
+.btn{
+  border-radius:12px;border:none;font-family:var(--sans);font-weight:600;
+  font-size:0.875rem;cursor:pointer;transition:all .2s;
+  display:inline-flex;align-items:center;gap:8px;padding:12px 26px;
+}
+.btn-primary{background:linear-gradient(135deg,var(--teal),#00B4A0);color:#fff;}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,158,142,0.3);}
+.btn-ghost{background:var(--surface);border:1.5px solid var(--border);color:var(--slate);}
+.btn-ghost:hover{border-color:var(--teal);color:var(--teal);}
+.btn-submit{background:linear-gradient(135deg,var(--emerald),var(--teal));color:#fff;}
+.btn-submit:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(5,150,105,0.3);}
+.privacy-note{font-size:0.73rem;color:var(--slate);display:flex;align-items:center;gap:5px;}
+
+/* loading */
+#loading{
+  display:none;position:fixed;inset:0;z-index:999;
+  background:rgba(240,244,248,0.92);backdrop-filter:blur(6px);
+  flex-direction:column;align-items:center;justify-content:center;gap:14px;
+}
+#loading.show{display:flex;}
+.spinner{
+  width:44px;height:44px;border-radius:50%;
+  border:3px solid var(--border);border-top-color:var(--teal);
+  animation:spin 0.8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+#loading p{font-family:var(--mono);font-size:0.8rem;color:var(--slate);}
+
+/* ── SUCCESS ── */
+#success-screen{display:none;text-align:center;padding:60px 24px;}
+#success-screen.show{display:block;animation:fadeUp .5s ease;}
+.success-icon{
+  width:72px;height:72px;border-radius:50%;
+  background:linear-gradient(135deg,var(--emerald),var(--teal));
+  display:flex;align-items:center;justify-content:center;
+  font-size:2rem;margin:0 auto 20px;box-shadow:0 0 40px rgba(5,150,105,0.2);
+  color:#fff;
+}
+#success-screen h2{font-family:var(--serif);font-size:1.7rem;margin-bottom:10px;color:var(--text);}
+#success-screen p{color:var(--slate);font-size:0.9rem;line-height:1.6;max-width:480px;margin:0 auto;}
+.response-id{
+  display:inline-block;font-family:var(--mono);font-size:0.85rem;
+  background:var(--teal-light);border:1px solid rgba(0,158,142,0.3);
+  border-radius:8px;padding:8px 18px;margin-top:14px;color:var(--teal);
+}
+.resp-count{font-family:var(--mono);font-size:0.75rem;color:var(--emerald);margin-top:8px;}
+.success-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:22px;}
+
+/* ── DATA VIEWER ── */
+#data-viewer{
+  display:none;position:fixed;inset:0;z-index:700;
+  background:rgba(240,244,248,0.97);backdrop-filter:blur(12px);
+  overflow-y:auto;padding:24px 16px;
+}
+#data-viewer.show{display:block;animation:fadeUp .3s ease;}
+.dv-box{
+  max-width:1200px;margin:0 auto;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:18px;padding:28px;box-shadow:0 4px 24px rgba(0,0,0,0.08);
+}
+.dv-header{
+  display:flex;align-items:flex-start;justify-content:space-between;
+  gap:16px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border-light);
+  flex-wrap:wrap;
+}
+.dv-actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+.dv-table-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border);}
+table.dv-table{width:100%;border-collapse:collapse;font-size:0.77rem;min-width:1000px;}
+table.dv-table th{
+  text-align:left;padding:10px 12px;
+  font-family:var(--mono);font-size:0.61rem;color:var(--slate);
+  letter-spacing:0.07em;text-transform:uppercase;
+  background:var(--surface2);
+  border-bottom:1px solid var(--border);white-space:nowrap;
+}
+table.dv-table td{
+  padding:9px 12px;border-bottom:1px solid var(--border-light);
+  color:var(--text2);max-width:180px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+table.dv-table tr:hover td{background:var(--teal-light);}
+table.dv-table td:first-child{color:var(--slate);font-family:var(--mono);font-size:0.7rem;}
+.info-box{
+  background:var(--teal-light);border:1px solid rgba(0,158,142,0.2);
+  border-radius:12px;padding:16px 18px;margin-bottom:16px;
+  font-size:0.82rem;line-height:1.6;color:var(--text2);
+}
+.info-box h4{font-family:var(--mono);font-size:0.7rem;color:var(--teal);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;}
+.info-box b{color:var(--text);}
+#csv-fallback{display:none;margin-bottom:12px;}
+#csv-fallback p{font-size:0.78rem;color:var(--amber);margin-bottom:6px;}
+#csv-text{
+  width:100%;height:110px;background:var(--surface2);
+  border:1px solid var(--border);border-radius:8px;
+  padding:10px;font-family:var(--mono);font-size:0.68rem;
+  color:var(--teal);resize:vertical;outline:none;
+}
+@media(max-width:600px){
+  .header h1{font-size:1.5rem;}
+  .section-card{padding:20px;}
+  .opt-pill{font-size:0.79rem;padding:7px 12px;}
+  .dv-box{padding:16px;}
+  .pss-table{font-size:0.82rem;}
+  .likert-row{flex-direction:column;align-items:flex-start;}
+}
+
+/* ── E-CONSENT ── */
+#consent-screen{
+  max-width:720px;margin:20px auto 60px;padding:0 24px;
+  animation:fadeUp .4s ease;
+}
+.consent-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:18px;padding:32px;
+  box-shadow:0 2px 16px rgba(0,0,0,0.07);
+}
+.consent-head{
+  display:flex;align-items:center;gap:14px;
+  margin-bottom:24px;padding-bottom:18px;
+  border-bottom:1px solid var(--border-light);
+}
+.consent-icon{
+  width:46px;height:46px;flex-shrink:0;border-radius:12px;
+  background:linear-gradient(135deg,rgba(0,158,142,0.15),rgba(0,158,142,0.05));
+  border:1px solid rgba(0,158,142,0.28);
+  display:flex;align-items:center;justify-content:center;font-size:1.3rem;
+}
+.consent-label{font-family:var(--mono);font-size:0.68rem;color:var(--slate);letter-spacing:0.1em;text-transform:uppercase;}
+.consent-title{font-family:var(--serif);font-size:1.08rem;color:var(--text);}
+.consent-body{
+  background:var(--surface2);border:1px solid var(--border-light);
+  border-radius:12px;padding:20px 22px;margin-bottom:22px;
+  font-size:0.86rem;color:var(--text2);line-height:1.75;
+}
+.consent-body p{margin-bottom:10px;}
+.consent-body p:last-child{margin-bottom:0;}
+.consent-body strong{color:var(--text);font-weight:600;}
+.consent-check-row{
+  display:flex;align-items:flex-start;gap:14px;
+  background:var(--teal-light);border:1.5px solid rgba(0,158,142,0.25);
+  border-radius:12px;padding:16px 18px;margin-bottom:22px;
+  cursor:pointer;transition:border-color .2s,background .2s;
+  user-select:none;
+}
+.consent-check-row:hover{border-color:var(--teal);background:rgba(0,158,142,0.12);}
+.consent-check-row.checked{border-color:var(--teal);background:rgba(0,158,142,0.12);}
+.consent-checkbox{
+  width:22px;height:22px;flex-shrink:0;border-radius:5px;
+  border:2px solid rgba(0,158,142,0.5);background:var(--surface);
+  display:flex;align-items:center;justify-content:center;
+  transition:all .2s;margin-top:1px;
+}
+.consent-check-row.checked .consent-checkbox{
+  background:var(--teal);border-color:var(--teal);
+}
+.consent-checkbox svg{display:none;width:13px;height:13px;}
+.consent-check-row.checked .consent-checkbox svg{display:block;}
+.consent-check-text{font-size:0.88rem;color:var(--text2);line-height:1.6;flex:1;}
+.consent-check-text strong{color:var(--text);}
+.consent-err{
+  display:none;font-size:0.75rem;color:var(--rose);
+  font-family:var(--mono);margin-bottom:14px;
+  background:rgba(220,38,38,0.06);border:1px solid rgba(220,38,38,0.2);
+  border-radius:8px;padding:8px 12px;
+}
+.consent-err.show{display:block;}
+.btn-consent{
+  width:100%;padding:14px;font-size:0.92rem;
+  background:linear-gradient(135deg,var(--teal),#00B4A0);
+  color:#fff;border:none;border-radius:12px;
+  font-family:var(--sans);font-weight:600;
+  cursor:pointer;transition:all .2s;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  opacity:0.55;pointer-events:none;
+}
+.btn-consent.enabled{opacity:1;pointer-events:auto;}
+.btn-consent.enabled:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,158,142,0.3);}
+
+/* ══════════════ RISK DASHBOARD ══════════════ */
+#risk-dashboard{display:none;min-height:100vh;background:var(--bg);padding:24px 16px 60px;}
+#risk-dashboard.show{display:block;animation:fadeUp .5s ease;}
+.risk-db-inner{max-width:780px;margin:0 auto;}
+
+.rdb-header{text-align:center;padding:32px 0 28px;}
+.rdb-logo{display:inline-flex;align-items:center;gap:8px;background:var(--teal-light);border:1px solid rgba(0,158,142,0.3);border-radius:40px;padding:6px 16px;font-family:var(--mono);font-size:0.68rem;color:var(--teal);letter-spacing:0.1em;margin-bottom:14px;}
+.rdb-title{font-family:var(--serif);font-size:1.9rem;color:var(--text);margin-bottom:8px;}
+.rdb-sub{color:var(--slate);font-size:0.88rem;}
+
+.rdb-hero{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:28px;margin-bottom:16px;display:flex;gap:24px;align-items:center;box-shadow:0 4px 24px rgba(0,0,0,0.07);}
+.rdb-hero-left{flex:1;}
+.rdb-risk-label{font-family:var(--mono);font-size:0.64rem;color:var(--slate);letter-spacing:0.14em;text-transform:uppercase;margin-bottom:8px;}
+.rdb-risk-level{font-family:var(--serif);font-size:2rem;font-weight:700;margin-bottom:10px;}
+.rdb-risk-level.low{color:var(--emerald);}
+.rdb-risk-level.moderate{color:var(--amber);}
+.rdb-risk-level.high{color:var(--rose);}
+.rdb-risk-desc{font-size:0.88rem;color:var(--text2);line-height:1.6;margin-bottom:12px;}
+.rdb-conf{font-family:var(--mono);font-size:0.74rem;color:var(--slate);background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 12px;display:inline-block;}
+.rdb-hero-right{flex-shrink:0;text-align:center;}
+.rdb-gauge-wrap{position:relative;width:180px;}
+.rdb-gauge{width:180px;height:108px;overflow:visible;}
+.gauge-fill{transition:stroke-dashoffset 1.5s cubic-bezier(.4,0,.2,1),stroke 0.5s;}
+.rdb-gauge-score{font-family:var(--mono);font-size:2rem;font-weight:700;color:var(--text);text-align:center;margin-top:-8px;}
+.rdb-gauge-label{font-family:var(--mono);font-size:0.64rem;color:var(--slate);text-align:center;letter-spacing:0.08em;}
+
+.rdb-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px;}
+.rdb-domain-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;box-shadow:0 2px 8px rgba(0,0,0,0.05);}
+.rdc-icon{font-size:1.3rem;margin-bottom:8px;}
+.rdc-label{font-family:var(--mono);font-size:0.62rem;color:var(--slate);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px;}
+.rdc-name{font-size:0.88rem;font-weight:600;color:var(--text);margin-bottom:10px;}
+.rdc-bar-track{height:7px;background:var(--border-light);border-radius:4px;margin-bottom:6px;overflow:hidden;}
+.rdc-bar-fill{height:100%;border-radius:4px;transition:width 1.2s cubic-bezier(.4,0,.2,1);}
+.rdc-score-row{display:flex;justify-content:space-between;align-items:center;}
+.rdc-score{font-family:var(--mono);font-size:0.78rem;font-weight:700;}
+.rdc-tag{font-size:0.68rem;padding:3px 9px;border-radius:8px;font-family:var(--mono);}
+.tag-low{background:rgba(5,150,105,0.1);color:var(--emerald);}
+.tag-mod{background:rgba(217,119,6,0.1);color:var(--amber);}
+.tag-high{background:rgba(220,38,38,0.1);color:var(--rose);}
+
+.rdb-insights-card,.rdb-recs-card,.rdb-summary-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,0.05);}
+.rdb-section-title{font-family:var(--serif);font-size:1.05rem;color:var(--text);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border-light);}
+.rdb-insights-body,.rdb-recs-body{font-size:0.88rem;line-height:1.7;color:var(--text2);}
+
+.ai-loading{display:flex;align-items:center;gap:12px;padding:16px 0;color:var(--slate);}
+.ai-spinner{width:18px;height:18px;border-radius:50%;border:2px solid var(--border);border-top-color:var(--teal);animation:spin 0.8s linear infinite;flex-shrink:0;}
+.insight-item{margin-bottom:10px;padding:10px 14px;background:var(--surface2);border-left:3px solid var(--teal);border-radius:0 8px 8px 0;font-size:0.86rem;}
+.rec-item{display:flex;gap:10px;margin-bottom:8px;padding:10px 14px;background:var(--surface2);border-radius:8px;font-size:0.86rem;}
+.rec-item .rec-num{font-family:var(--mono);font-size:0.75rem;background:var(--teal);color:#fff;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+
+.rdb-summary-table-inner{overflow-x:auto;border-radius:8px;border:1px solid var(--border);}
+table.rdb-tbl{width:100%;border-collapse:collapse;font-size:0.78rem;}
+table.rdb-tbl th{background:var(--surface2);padding:9px 14px;font-family:var(--mono);font-size:0.63rem;color:var(--slate);text-transform:uppercase;letter-spacing:0.07em;border-bottom:1px solid var(--border);text-align:left;}
+table.rdb-tbl td{padding:9px 14px;border-bottom:1px solid var(--border-light);color:var(--text2);vertical-align:top;}
+table.rdb-tbl tr:last-child td{border-bottom:none;}
+table.rdb-tbl tr:hover td{background:var(--teal-light);}
+table.rdb-tbl td:first-child{font-weight:600;color:var(--text);white-space:nowrap;font-size:0.8rem;}
+table.rdb-tbl td:nth-child(2){color:var(--slate);font-size:0.74rem;}
+table.rdb-tbl td:last-child{font-weight:500;}
+
+.rdb-footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:16px 0;}
+.rdb-resp-id{font-family:var(--mono);font-size:0.75rem;color:var(--slate);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 14px;}
+.rdb-footer-btns{display:flex;gap:10px;flex-wrap:wrap;}
+
+@media(max-width:600px){
+  .rdb-hero{flex-direction:column;}
+  .rdb-grid{grid-template-columns:1fr;}
+  .rdb-gauge-wrap{width:140px;}
+}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loading"><div class="spinner"></div><p>Saving your response…</p></div>
+
+<!-- ── HEADER ── -->
+<div class="header">
+  <div class="logo-chip"><span class="dot"></span>MedRisk AI · Self-Medication Study</div>
+  <h1>Self-Medication Risk<br><span>Behaviour Survey</span></h1>
+  <p>This survey is part of a research study: <em>"Development of a Machine Learning Model to Predict Self-Medication Risk Behaviour Among Medical Students."</em> All responses are fully anonymous.</p>
+  <div class="anon-badge">🔒 No name collected &nbsp;·&nbsp; Fully anonymous &nbsp;·&nbsp; IEC approved</div>
+</div>
+
+<!-- ── RESEARCHER BUTTON ── -->
+<div class="researcher-bar">
+  <button class="researcher-btn" onclick="showDataViewer()">
+    🔬 <span><b>Researcher Panel</b> — View &amp; export all collected responses</span>
+    <span id="resp-counter" style="margin-left:auto;font-family:var(--mono);font-size:0.72rem;background:rgba(124,58,237,0.1);border:1px solid rgba(124,58,237,0.25);padding:3px 10px;border-radius:10px;color:#7C3AED"></span>
+  </button>
+</div>
+
+<!-- ── PROGRESS ── -->
+<div class="progress-shell" id="progress-shell" style="display:none;">
+  <div class="progress-info">
+    <span>Section <b id="sec-cur">A</b> of <b>E</b></span>
+    <span id="prog-pct" style="color:var(--teal)">0% complete</span>
+  </div>
+  <div class="progress-track"><div class="progress-fill" id="prog-bar" style="width:0%"></div></div>
+</div>
+
+<!-- ── E-CONSENT SCREEN ── -->
+<div id="consent-screen">
+  <div class="consent-card">
+    <div class="consent-head">
+      <div class="consent-icon">📋</div>
+      <div>
+        <div class="consent-label">Informed Consent</div>
+        <div class="consent-title">Before You Begin — Please Read Carefully</div>
+      </div>
+    </div>
+
+    <div class="consent-body">
+      <p>You are being invited to participate in a research study on <strong>self-medication practices among medical students</strong>. Before proceeding, please read the following information carefully.</p>
+      <p><strong>Purpose of the Study:</strong> This study aims to understand patterns, attitudes, and factors associated with self-medication behaviour among undergraduate medical students.</p>
+      <p><strong>Confidentiality:</strong> All information you provide will be kept strictly confidential. Your responses will be anonymised and used solely for research and academic purposes. No personally identifying information will be published or disclosed.</p>
+      <p><strong>Voluntary Participation:</strong> Your participation is entirely voluntary. You are free to withdraw at any point without any consequence or penalty whatsoever.</p>
+      <p><strong>Duration:</strong> Completing this questionnaire will take approximately 8–12 minutes.</p>
+    </div>
+
+    <div class="consent-check-row" id="consent-row" onclick="toggleConsent()">
+      <div class="consent-checkbox" id="consent-box">
+        <svg viewBox="0 0 13 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M1.5 5L5 8.5L11.5 1.5" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="consent-check-text">
+        <strong>I have been informed about the purpose of the study and voluntarily agree to participate.</strong> I understand that my responses will be kept confidential and that I am free to withdraw at any point without any consequences.
+      </div>
+    </div>
+
+    <div class="consent-err" id="consent-err">⚠ You must tick the consent box above to proceed.</div>
+
+    <button class="btn-consent" id="consent-btn" onclick="proceedToSurvey()">
+      Begin Survey &nbsp;→
+    </button>
+  </div>
+</div>
+
+<!-- ══════════ FORM ══════════ -->
+<div class="form-wrap" id="main-form" style="display:none;">
+
+<!-- ─── SECTION A ─── -->
+<div class="section-card active" id="sec-A">
+  <div class="section-head">
+    <div class="section-icon ic-a">🎓</div>
+    <div>
+      <div class="section-label">Section A</div>
+      <div class="section-title">Demographic &amp; Academic Variables</div>
+    </div>
+  </div>
+
+  <!-- Register Number & Email ID -->
+  <div class="q-block" id="qb-sid">
+    <div class="q-num">ID</div>
+    <div class="q-text">Register Number <span class="required">*</span></div>
+    <div class="q-hint">Enter your institution register number. This is used solely to prevent duplicate entries and will not be linked to your identity.</div>
+    <input type="text" class="text-input" id="student-id" placeholder="e.g. 2024MBB001" maxlength="30" oninput="clearErr('qb-sid')"/>
+    <div class="err-msg">Please enter your Register Number.</div>
+  </div>
+
+  <div class="q-block" id="qb-email">
+    <div class="q-num">EMAIL</div>
+    <div class="q-text">Register Email ID <span class="required">*</span></div>
+    <div class="q-hint">Enter your institutional email address. This will not be published or shared.</div>
+    <input type="email" class="text-input" id="student-email" placeholder="e.g. student@institution.edu" maxlength="80" oninput="clearErr('qb-email')"/>
+    <div class="err-msg">Please enter a valid Register Email ID.</div>
+  </div>
+
+  <!-- Q1: Year of Study -->
+  <div class="q-block" id="qb-1">
+    <div class="q-num">Q1</div>
+    <div class="q-text">Year of Study <span class="required">*</span></div>
+    <div class="options-grid">
+      <label class="opt-pill" onclick="pickRadio(this,'q1')"><span class="ind"></span>Phase I (Year 1)<input type="radio" name="q1" value="Phase I (Year 1)"></label>
+      <label class="opt-pill" onclick="pickRadio(this,'q1')"><span class="ind"></span>Phase II (Year 2)<input type="radio" name="q1" value="Phase II (Year 2)"></label>
+      <label class="opt-pill" onclick="pickRadio(this,'q1')"><span class="ind"></span>Phase III (Part I)<input type="radio" name="q1" value="Phase III (Part I)"></label>
+      <label class="opt-pill" onclick="pickRadio(this,'q1')"><span class="ind"></span>Phase III (Part II)<input type="radio" name="q1" value="Phase III (Part II)"></label>
+    </div>
+    <div class="err-msg">Please select your year of study.</div>
+  </div>
+
+  <!-- Q2: Age (NEW) -->
+  <div class="q-block" id="qb-2">
+    <div class="q-num">Q2</div>
+    <div class="q-text">Age (in years) <span class="required">*</span></div>
+    <div class="options-grid">
+      <label class="opt-pill" onclick="pickRadio(this,'q2')"><span class="ind"></span>18–20<input type="radio" name="q2" value="18-20"></label>
+      <label class="opt-pill" onclick="pickRadio(this,'q2')"><span class="ind"></span>21–23<input type="radio" name="q2" value="21-23"></label>
+      <label class="opt-pill" onclick="pickRadio(this,'q2')"><span class="ind"></span>24–26<input type="radio" name="q2" value="24-26"></label>
+      <label class="opt-pill" onclick="pickRadio(this,'q2')"><span class="ind"></span>27 or above<input type="radio" name="q2" value="27+"></label>
+    </div>
+    <div class="err-msg">Please select your age group.</div>
+  </div>
+
+  <!-- Q3: Gender -->
+  <div class="q-block" id="qb-3">
+    <div class="q-num">Q3</div>
+    <div class="q-text">Gender <span class="required">*</span></div>
+    <div class="options-grid">
+      <label class="opt-pill" onclick="pickRadio(this,'q3')"><span class="ind"></span>Male<input type="radio" name="q3" value="Male"></label>
+      <label class="opt-pill" onclick="pickRadio(this,'q3')"><span class="ind"></span>Female<input type="radio" name="q3" value="Female"></label>
+    </div>
+    <div class="err-msg">Please select your gender.</div>
+  </div>
+
+  <!-- Q4: Residence -->
+  <div class="q-block" id="qb-4">
+    <div class="q-num">Q4</div>
+    <div class="q-text">Residence <span class="required">*</span></div>
+    <div class="options-grid">
+      <label class="opt-pill" onclick="pickRadio(this,'q4')"><span class="ind"></span>Home<input type="radio" name="q4" value="Home"></label>
+      <label class="opt-pill" onclick="pickRadio(this,'q4')"><span class="ind"></span>Hostel<input type="radio" name="q4" value="Hostel"></label>
+      <label class="opt-pill" onclick="pickRadio(this,'q4')"><span class="ind"></span>PG Accommodation<input type="radio" name="q4" value="PG Accommodation"></label>
+    </div>
+    <div class="err-msg">Please select your residence type.</div>
+  </div>
+
+  <!-- Q5: CGPA (NEW) -->
+  <div class="q-block" id="qb-5">
+    <div class="q-num">Q5</div>
+    <div class="q-text">Academic Performance (Self-reported) <span class="required">*</span></div>
+    <div class="q-hint">Indicate your general academic performance in exams.</div>
+    <div class="options-grid">
+      <label class="opt-pill" onclick="pickRadio(this,'q5')"><span class="ind"></span>Distinction<input type="radio" name="q5" value="Distinction"></label>
+      <label class="opt-pill" onclick="pickRadio(this,'q5')"><span class="ind"></span>1st Class<input type="radio" name="q5" value="1st Class"></label>
+      <label class="opt-pill" onclick="pickRadio(this,'q5')"><span class="ind"></span>Pass Class<input type="radio" name="q5" value="Pass Class"></label>
+      <label class="opt-pill" onclick="pickRadio(this,'q5')"><span class="ind"></span>Fail<input type="radio" name="q5" value="Fail"></label>
+    </div>
+    <div class="err-msg">Please select your academic performance category.</div>
+  </div>
+
+  <!-- Q6: Healthcare family background -->
+  <div class="q-block" id="qb-6">
+    <div class="q-num">Q6</div>
+    <div class="q-text">Do you have a healthcare professional in your immediate family? <span class="required">*</span></div>
+    <div class="options-grid">
+      <label class="opt-pill" onclick="pickRadio(this,'q6')"><span class="ind"></span>Yes<input type="radio" name="q6" value="Yes"></label>
+      <label class="opt-pill" onclick="pickRadio(this,'q6')"><span class="ind"></span>No<input type="radio" name="q6" value="No"></label>
+    </div>
+    <div class="err-msg">Please answer this question.</div>
+  </div>
+
+  <div class="nav-row">
+    <button class="btn btn-primary" onclick="goNext('A','B')">Next: Self-Medication Practice →</button>
+  </div>
+</div>
+
+<!-- ─── SECTION B ─── -->
+<div class="section-card" id="sec-B">
+  <div class="section-head">
+    <div class="section-icon ic-b">💊</div>
+    <div>
+      <div class="section-label">Section B</div>
+      <div class="section-title">Self-Medication Practice Variables</div>
+    </div>
+  </div>
+
+  <div class="q-block" id="qb-7">
+    <div class="q-num">Q7</div>
+    <div class="q-text">Have you ever practiced self-medication in the past six months? <span class="required">*</span></div>
+    <div class="options-grid">
+      <label class="opt-pill" onclick="pickRadio(this,'q7');toggleSub('q7','Yes','sub-q7a')"><span class="ind"></span>Yes<input type="radio" name="q7" value="Yes"></label>
+      <label class="opt-pill" onclick="pickRadio(this,'q7');toggleSub('q7','Yes','sub-q7a')"><span class="ind"></span>No<input type="radio" name="q7" value="No"></label>
+    </div>
+    <div class="sub-q" id="sub-q7a">
+      <div class="q-text">If yes, how frequently?</div>
+      <div class="options-grid">
+        <label class="opt-pill" onclick="pickRadio(this,'q7a')"><span class="ind"></span>Rarely (1–2 times)<input type="radio" name="q7a" value="Rarely (1-2 times)"></label>
+        <label class="opt-pill" onclick="pickRadio(this,'q7a')"><span class="ind"></span>Occasionally (3–6 times)<input type="radio" name="q7a" value="Occasionally (3-6 times)"></label>
+        <label class="opt-pill" onclick="pickRadio(this,'q7a')"><span class="ind"></span>Frequently (&gt;6 times)<input type="radio" name="q7a" value="Frequently (>6 times)"></label>
+      </div>
+    </div>
+    <div class="err-msg">Please answer this question.</div>
+  </div>
+
+  <!-- Duration (NEW) -->
+  <div class="q-block" id="qb-8">
+    <div class="q-num">Q8</div>
+    <div class="q-text">How long did you typically continue self-medication without consulting a doctor? <span class="required">*</span></div>
+    <div class="options-grid">
+      <label class="opt-pill" onclick="pickRadio(this,'q8')"><span class="ind"></span>1–2 days<input type="radio" name="q8" value="1-2 days"></label>
+      <label class="opt-pill" onclick="pickRadio(this,'q8')"><span class="ind"></span>3–5 days<input type="radio" name="q8" value="3-5 days"></label>
+      <label class="opt-pill" onclick="pickRadio(this,'q8')"><span class="ind"></span>More than 5 days<input type="radio" name="q8" value=">5 days"></label>
+      <label class="opt-pill" onclick="pickRadio(this,'q8')"><span class="ind"></span>Not applicable<input type="radio" name="q8" value="N/A"></label>
+    </div>
+    <div class="err-msg">Please answer this question.</div>
+  </div>
+
+  <div class="q-block" id="qb-9">
+    <div class="q-num">Q9</div>
+    <div class="q-text">Have you received formal education on rational drug use? <span class="required">*</span></div>
+    <div class="options-grid">
+      <label class="opt-pill" onclick="pickRadio(this,'q9')"><span class="ind"></span>Yes<input type="radio" name="q9" value="Yes"></label>
+      <label class="opt-pill" onclick="pickRadio(this,'q9')"><span class="ind"></span>No<input type="radio" name="q9" value="No"></label>
+    </div>
+    <div class="err-msg">Please answer this question.</div>
+  </div>
+
+  <div class="q-block" id="qb-10">
+    <div class="q-num">Q10</div>
+    <div class="q-text">Common reasons for self-medication <span style="color:var(--slate);font-weight:400">(select all that apply)</span></div>
+    <div class="q-hint">✔ You may select more than one option.</div>
+    <div class="options-grid">
+      <label class="opt-pill cb" onclick="pickCheck(this);return false;"><span class="ind"></span>Mild illness (headache, fever, cold, pain, gastritis…)<input type="checkbox" name="q10" value="Mild illness"></label>
+      <label class="opt-pill cb" onclick="pickCheck(this);return false;"><span class="ind"></span>Easy availability of medicines<input type="checkbox" name="q10" value="Easy availability"></label>
+      <label class="opt-pill cb" onclick="pickCheck(this);return false;"><span class="ind"></span>Lack of time to visit a doctor<input type="checkbox" name="q10" value="Lack of time"></label>
+      <label class="opt-pill cb" onclick="pickCheck(this);return false;"><span class="ind"></span>Difficulties in consultation at hospitals<input type="checkbox" name="q10" value="Consultation difficulties"></label>
+      <label class="opt-pill cb" onclick="pickCheck(this);return false;"><span class="ind"></span>Previous experience with the illness<input type="checkbox" name="q10" value="Previous experience"></label>
+      <label class="opt-pill cb" onclick="pickCheck(this);return false;"><span class="ind"></span>Cost-saving reasons<input type="checkbox" name="q10" value="Cost-saving"></label>
+      <label class="opt-pill cb" onclick="pickCheck(this);return false;"><span class="ind"></span>Advice from friends<input type="checkbox" name="q10" value="Advice from friends"></label>
+      <label class="opt-pill cb" onclick="pickCheck(this);return false;"><span class="ind"></span>Influence of social media<input type="checkbox" name="q10" value="Social media influence"></label>
+      <label class="opt-pill cb" onclick="pickCheck(this);return false;"><span class="ind"></span>Influence of pharmaceutical advertisements<input type="checkbox" name="q10" value="Pharma advertisements"></label>
+    </div>
+  </div>
+
+  <div class="q-block" id="qb-11">
+    <div class="q-num">Q11</div>
+    <div class="q-text">Types of medications commonly used for self-medication <span style="color:var(--slate);font-weight:400">(select all that apply)</span></div>
+    <div class="q-hint">✔ You may select more than one option.</div>
+    <div class="options-grid">
+      <label class="opt-pill cb" onclick="pickCheck(this);return false;"><span class="ind"></span>Analgesics (Painkillers)<input type="checkbox" name="q11" value="Analgesics"></label>
+      <label class="opt-pill cb" onclick="pickCheck(this);return false;"><span class="ind"></span>Antipyretics (Fever medications)<input type="checkbox" name="q11" value="Antipyretics"></label>
+      <label class="opt-pill cb" onclick="pickCheck(this);return false;"><span class="ind"></span>Antibiotics<input type="checkbox" name="q11" value="Antibiotics"></label>
+      <label class="opt-pill cb" onclick="pickCheck(this);return false;"><span class="ind"></span>Antihistamines (Allergy medicines)<input type="checkbox" name="q11" value="Antihistamines"></label>
+      <label class="opt-pill cb" onclick="pickCheck(this);return false;"><span class="ind"></span>Cough and cold medications<input type="checkbox" name="q11" value="Cough and cold"></label>
+      <label class="opt-pill cb" onclick="pickCheck(this);return false;"><span class="ind"></span>Gastrointestinal drugs (Antacids, PPIs, Antispasmodics…)<input type="checkbox" name="q11" value="GI drugs"></label>
+      <label class="opt-pill cb" onclick="pickCheck(this);return false;"><span class="ind"></span>Multivitamins / Iron / Calcium supplements<input type="checkbox" name="q11" value="Supplements"></label>
+    </div>
+  </div>
+
+  <!-- Antibiotic course completion (NEW) -->
+  <div class="q-block" id="qb-12">
+    <div class="q-num">Q12</div>
+    <div class="q-text">If you used antibiotics for self-medication, did you complete the full prescribed course? <span class="required">*</span></div>
+    <div class="options-grid">
+      <label class="opt-pill" onclick="pickRadio(this,'q12')"><span class="ind"></span>Yes, always<input type="radio" name="q12" value="Yes always"></label>
+      <label class="opt-pill" onclick="pickRadio(this,'q12')"><span class="ind"></span>Sometimes<input type="radio" name="q12" value="Sometimes"></label>
+      <label class="opt-pill" onclick="pickRadio(this,'q12')"><span class="ind"></span>No, I stopped when I felt better<input type="radio" name="q12" value="No stopped early"></label>
+      <label class="opt-pill" onclick="pickRadio(this,'q12')"><span class="ind"></span>I have not used antibiotics<input type="radio" name="q12" value="No antibiotic use"></label>
+    </div>
+    <div class="err-msg">Please answer this question.</div>
+  </div>
+
+  <div class="q-block" id="qb-13">
+    <div class="q-num">Q13</div>
+    <div class="q-text">Sources of medication <span style="color:var(--slate);font-weight:400">(select all that apply)</span></div>
+    <div class="q-hint">✔ You may select more than one option.</div>
+    <div class="options-grid">
+      <label class="opt-pill cb" onclick="pickCheck(this);return false;"><span class="ind"></span>Pharmacy without prescription<input type="checkbox" name="q13" value="Pharmacy without Rx"></label>
+      <label class="opt-pill cb" onclick="pickCheck(this);return false;"><span class="ind"></span>Leftover medicines at home<input type="checkbox" name="q13" value="Leftover medicines"></label>
+      <label class="opt-pill cb" onclick="pickCheck(this);return false;"><span class="ind"></span>Online pharmacies<input type="checkbox" name="q13" value="Online pharmacies"></label>
+      <label class="opt-pill cb" onclick="pickCheck(this);return false;"><span class="ind"></span>Friends<input type="checkbox" name="q13" value="Friends"></label>
+    </div>
+  </div>
+
+  <!-- Q14 (NEW from document): Did you check any information source before self-medicating -->
+  <div class="q-block" id="qb-14new">
+    <div class="q-num">Q14</div>
+    <div class="q-text">Did you check any information source before self-medicating? <span class="required">*</span></div>
+    <div class="options-grid">
+      <label class="opt-pill" onclick="pickRadio(this,'q14src');toggleSub('q14src','Yes','sub-q14src')"><span class="ind"></span>Yes<input type="radio" name="q14src" value="Yes"></label>
+      <label class="opt-pill" onclick="pickRadio(this,'q14src');hideSub('sub-q14src')"><span class="ind"></span>No<input type="radio" name="q14src" value="No"></label>
+    </div>
+    <div class="sub-q" id="sub-q14src">
+      <div class="q-text">If yes, which source? <span style="color:var(--slate);font-weight:400">(select all that apply)</span></div>
+      <div class="options-grid">
+        <label class="opt-pill cb" onclick="pickCheck(this);return false;"><span class="ind"></span>Medical textbooks<input type="checkbox" name="q14srcs" value="Medical textbooks"></label>
+        <label class="opt-pill cb" onclick="pickCheck(this);return false;"><span class="ind"></span>Pharmacist advice<input type="checkbox" name="q14srcs" value="Pharmacist advice"></label>
+        <label class="opt-pill cb" onclick="pickCheck(this);return false;"><span class="ind"></span>Google / health websites<input type="checkbox" name="q14srcs" value="Google/health websites"></label>
+        <label class="opt-pill cb" onclick="pickCheck(this);return false;"><span class="ind"></span>Medical apps<input type="checkbox" name="q14srcs" value="Medical apps"></label>
+        <label class="opt-pill cb" onclick="pickCheck(this);return false;"><span class="ind"></span>AI chatbots (e.g., ChatGPT)<input type="checkbox" name="q14srcs" value="AI chatbots"></label>
+        <label class="opt-pill cb" onclick="pickCheck(this);return false;"><span class="ind"></span>WHO (World Health Organization)<input type="checkbox" name="q14srcs" value="WHO"></label>
+        <label class="opt-pill cb" onclick="pickCheck(this);return false;"><span class="ind"></span>Mayo Clinic<input type="checkbox" name="q14srcs" value="Mayo Clinic"></label>
+      </div>
+    </div>
+    <div class="err-msg">Please answer this question.</div>
+  </div>
+
+  <div class="q-block" id="qb-14">
+    <div class="q-num">Q15</div>
+    <div class="q-text">How often do you check a reliable source before self-medicating? <span class="required">*</span></div>
+    <div class="options-grid">
+      <label class="opt-pill" onclick="pickRadio(this,'q14')"><span class="ind"></span>Always<input type="radio" name="q14" value="Always"></label>
+      <label class="opt-pill" onclick="pickRadio(this,'q14')"><span class="ind"></span>Sometimes<input type="radio" name="q14" value="Sometimes"></label>
+      <label class="opt-pill" onclick="pickRadio(this,'q14')"><span class="ind"></span>Rarely<input type="radio" name="q14" value="Rarely"></label>
+      <label class="opt-pill" onclick="pickRadio(this,'q14')"><span class="ind"></span>Never<input type="radio" name="q14" value="Never"></label>
+    </div>
+    <div class="err-msg">Please answer this question.</div>
+  </div>
+
+  <div class="nav-row">
+    <button class="btn btn-ghost" onclick="goPrev('B','A')">← Back</button>
+    <button class="btn btn-primary" onclick="goNext('B','C')">Next: Psychological Variables →</button>
+  </div>
+</div>
+
+<!-- ─── SECTION C ─── -->
+<div class="section-card" id="sec-C">
+  <div class="section-head">
+    <div class="section-icon ic-c">🧠</div>
+    <div>
+      <div class="section-label">Section C</div>
+      <div class="section-title">Psychological &amp; Behavioural Variables</div>
+    </div>
+  </div>
+
+  <!-- PSS-4 Validated Stress Scale (NEW) -->
+  <div class="q-block" id="qb-15">
+    <div class="q-num">Q16 — PSS-4</div>
+    <div class="q-text">Perceived Stress Scale (PSS-4) <span class="required">*</span></div>
+    <div class="q-hint">In the last month, how often have you experienced the following? (0 = Never, 1 = Almost Never, 2 = Sometimes, 3 = Fairly Often, 4 = Very Often)</div>
+
+    <table class="pss-table" id="pss-table">
+      <thead>
+        <tr>
+          <th>Statement</th>
+          <th>0</th><th>1</th><th>2</th><th>3</th><th>4</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr data-pss="pss1">
+          <td>Been upset because of something that happened unexpectedly?</td>
+          <td class="pss-radio-cell"><div class="pss-radio-wrap"><div class="pss-opt" onclick="pickPSS(this,'pss1',0)">0</div></div></td>
+          <td class="pss-radio-cell"><div class="pss-radio-wrap"><div class="pss-opt" onclick="pickPSS(this,'pss1',1)">1</div></div></td>
+          <td class="pss-radio-cell"><div class="pss-radio-wrap"><div class="pss-opt" onclick="pickPSS(this,'pss1',2)">2</div></div></td>
+          <td class="pss-radio-cell"><div class="pss-radio-wrap"><div class="pss-opt" onclick="pickPSS(this,'pss1',3)">3</div></div></td>
+          <td class="pss-radio-cell"><div class="pss-radio-wrap"><div class="pss-opt" onclick="pickPSS(this,'pss1',4)">4</div></div></td>
+        </tr>
+        <tr data-pss="pss2">
+          <td>Felt unable to control the important things in your life?</td>
+          <td class="pss-radio-cell"><div class="pss-radio-wrap"><div class="pss-opt" onclick="pickPSS(this,'pss2',0)">0</div></div></td>
+          <td class="pss-radio-cell"><div class="pss-radio-wrap"><div class="pss-opt" onclick="pickPSS(this,'pss2',1)">1</div></div></td>
+          <td class="pss-radio-cell"><div class="pss-radio-wrap"><div class="pss-opt" onclick="pickPSS(this,'pss2',2)">2</div></div></td>
+          <td class="pss-radio-cell"><div class="pss-radio-wrap"><div class="pss-opt" onclick="pickPSS(this,'pss2',3)">3</div></div></td>
+          <td class="pss-radio-cell"><div class="pss-radio-wrap"><div class="pss-opt" onclick="pickPSS(this,'pss2',4)">4</div></div></td>
+        </tr>
+        <tr data-pss="pss3">
+          <td>Felt nervous and stressed?</td>
+          <td class="pss-radio-cell"><div class="pss-radio-wrap"><div class="pss-opt" onclick="pickPSS(this,'pss3',0)">0</div></div></td>
+          <td class="pss-radio-cell"><div class="pss-radio-wrap"><div class="pss-opt" onclick="pickPSS(this,'pss3',1)">1</div></div></td>
+          <td class="pss-radio-cell"><div class="pss-radio-wrap"><div class="pss-opt" onclick="pickPSS(this,'pss3',2)">2</div></div></td>
+          <td class="pss-radio-cell"><div class="pss-radio-wrap"><div class="pss-opt" onclick="pickPSS(this,'pss3',3)">3</div></div></td>
+          <td class="pss-radio-cell"><div class="pss-radio-wrap"><div class="pss-opt" onclick="pickPSS(this,'pss3',4)">4</div></div></td>
+        </tr>
+        <tr data-pss="pss4">
+          <td>Felt difficulties were piling up so high that you could not overcome them?</td>
+          <td class="pss-radio-cell"><div class="pss-radio-wrap"><div class="pss-opt" onclick="pickPSS(this,'pss4',0)">0</div></div></td>
+          <td class="pss-radio-cell"><div class="pss-radio-wrap"><div class="pss-opt" onclick="pickPSS(this,'pss4',1)">1</div></div></td>
+          <td class="pss-radio-cell"><div class="pss-radio-wrap"><div class="pss-opt" onclick="pickPSS(this,'pss4',2)">2</div></div></td>
+          <td class="pss-radio-cell"><div class="pss-radio-wrap"><div class="pss-opt" onclick="pickPSS(this,'pss4',3)">3</div></div></td>
+          <td class="pss-radio-cell"><div class="pss-radio-wrap"><div class="pss-opt" onclick="pickPSS(this,'pss4',4)">4</div></div></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="pss-score-bar" id="pss-score-bar" style="display:none;">
+      <span class="pss-score-label">PSS-4 Score:</span>
+      <span class="pss-score-val" id="pss-score-val">—</span>
+      <span class="pss-score-denom">/ 16</span>
+      <div class="pss-bands">
+        <span class="pss-band band-low">Low: 0–5</span>
+        <span class="pss-band band-mod">Moderate: 6–10</span>
+        <span class="pss-band band-high">High: 11–16</span>
+      </div>
+    </div>
+    <div class="err-msg">Please complete all four stress scale items.</div>
+  </div>
+
+  <!-- Q16: Stress influences SM -->
+  <div class="q-block" id="qb-16">
+    <div class="q-num">Q17</div>
+    <div class="q-text">Do you feel stress or academic pressure influences your self-medication practice? <span class="required">*</span></div>
+    <div class="options-grid">
+      <label class="opt-pill" onclick="pickRadio(this,'q16')"><span class="ind"></span>Yes<input type="radio" name="q16" value="Yes"></label>
+      <label class="opt-pill" onclick="pickRadio(this,'q16')"><span class="ind"></span>No<input type="radio" name="q16" value="No"></label>
+    </div>
+    <div class="err-msg">Please answer this question.</div>
+  </div>
+
+  <!-- Q17: SM for stress/anxiety (separated from sleep) -->
+  <div class="q-block" id="qb-17">
+    <div class="q-num">Q18</div>
+    <div class="q-text">Have you ever used self-medication to manage stress or anxiety? <span class="required">*</span></div>
+    <div class="options-grid">
+      <label class="opt-pill" onclick="pickRadio(this,'q17');toggleSub('q17','Yes','sub-q17a')"><span class="ind"></span>Yes<input type="radio" name="q17" value="Yes"></label>
+      <label class="opt-pill" onclick="pickRadio(this,'q17');toggleSub('q17','Yes','sub-q17a')"><span class="ind"></span>No<input type="radio" name="q17" value="No"></label>
+    </div>
+    <div class="sub-q" id="sub-q17a">
+      <div class="q-text">If yes, how often?</div>
+      <div class="options-grid">
+        <label class="opt-pill" onclick="pickRadio(this,'q17a')"><span class="ind"></span>Rarely<input type="radio" name="q17a" value="Rarely"></label>
+        <label class="opt-pill" onclick="pickRadio(this,'q17a')"><span class="ind"></span>Occasionally<input type="radio" name="q17a" value="Occasionally"></label>
+        <label class="opt-pill" onclick="pickRadio(this,'q17a')"><span class="ind"></span>Frequently<input type="radio" name="q17a" value="Frequently"></label>
+      </div>
+    </div>
+    <div class="err-msg">Please answer this question.</div>
+  </div>
+
+  <!-- Q18: Sleep quality (now independent) -->
+  <div class="q-block" id="qb-18">
+    <div class="q-num">Q19</div>
+    <div class="q-text">Have you used self-medication (e.g. antihistamines, melatonin, any OTC sleep aid) to manage sleep disturbances? <span class="required">*</span></div>
+    <div class="options-grid">
+      <label class="opt-pill" onclick="pickRadio(this,'q18')"><span class="ind"></span>Yes<input type="radio" name="q18" value="Yes"></label>
+      <label class="opt-pill" onclick="pickRadio(this,'q18')"><span class="ind"></span>No<input type="radio" name="q18" value="No"></label>
+    </div>
+    <div class="err-msg">Please answer this question.</div>
+  </div>
+
+  <!-- Q19: Peer influence (NEW) -->
+  <div class="q-block" id="qb-19">
+    <div class="q-num">Q20</div>
+    <div class="q-text">Have friends or peers ever recommended a specific medicine to you, which you then used? <span class="required">*</span></div>
+    <div class="options-grid">
+      <label class="opt-pill" onclick="pickRadio(this,'q19')"><span class="ind"></span>Yes, and I used it<input type="radio" name="q19" value="Yes used"></label>
+      <label class="opt-pill" onclick="pickRadio(this,'q19')"><span class="ind"></span>Yes, but I did not use it<input type="radio" name="q19" value="Yes not used"></label>
+      <label class="opt-pill" onclick="pickRadio(this,'q19')"><span class="ind"></span>No<input type="radio" name="q19" value="No"></label>
+    </div>
+    <div class="err-msg">Please answer this question.</div>
+  </div>
+
+  <!-- Q20: Social media -->
+  <div class="q-block" id="qb-20">
+    <div class="q-num">Q21</div>
+    <div class="q-text">Do you rely on social media influencers or online reviews for medication decisions? <span class="required">*</span></div>
+    <div class="options-grid">
+      <label class="opt-pill" onclick="pickRadio(this,'q20')"><span class="ind"></span>Yes<input type="radio" name="q20" value="Yes"></label>
+      <label class="opt-pill" onclick="pickRadio(this,'q20')"><span class="ind"></span>No<input type="radio" name="q20" value="No"></label>
+    </div>
+    <div class="err-msg">Please answer this question.</div>
+  </div>
+
+  <div class="nav-row">
+    <button class="btn btn-ghost" onclick="goPrev('C','B')">← Back</button>
+    <button class="btn btn-primary" onclick="goNext('C','D')">Next: Awareness &amp; Attitudes →</button>
+  </div>
+</div>
+
+<!-- ─── SECTION D ─── -->
+<div class="section-card" id="sec-D">
+  <div class="section-head">
+    <div class="section-icon ic-d">🔍</div>
+    <div>
+      <div class="section-label">Section D</div>
+      <div class="section-title">Awareness &amp; Attitude Variables</div>
+    </div>
+  </div>
+
+  <!-- Expanded Attitude Likert (replaces single binary Q13) -->
+  <div class="q-block" id="qb-21">
+    <div class="q-num">Q22 — Attitude Scale</div>
+    <div class="q-text">Rate your agreement with the following statements <span class="required">*</span></div>
+    <div class="q-hint">1 = Strongly Disagree · 2 = Disagree · 3 = Neutral · 4 = Agree · 5 = Strongly Agree</div>
+    <div class="likert-wrap" id="likert-21">
+      <div class="likert-row" data-lik="lik21a">
+        <span class="likert-label">Self-medication is acceptable for minor, self-limiting ailments.</span>
+        <div class="likert-opts">
+          <div class="likert-opt" onclick="pickLikert(this,'lik21a',1)">1</div>
+          <div class="likert-opt" onclick="pickLikert(this,'lik21a',2)">2</div>
+          <div class="likert-opt" onclick="pickLikert(this,'lik21a',3)">3</div>
+          <div class="likert-opt" onclick="pickLikert(this,'lik21a',4)">4</div>
+          <div class="likert-opt" onclick="pickLikert(this,'lik21a',5)">5</div>
+        </div>
+      </div>
+      <div class="likert-row" data-lik="lik21b">
+        <span class="likert-label">I am confident in choosing the right medicine for myself.</span>
+        <div class="likert-opts">
+          <div class="likert-opt" onclick="pickLikert(this,'lik21b',1)">1</div>
+          <div class="likert-opt" onclick="pickLikert(this,'lik21b',2)">2</div>
+          <div class="likert-opt" onclick="pickLikert(this,'lik21b',3)">3</div>
+          <div class="likert-opt" onclick="pickLikert(this,'lik21b',4)">4</div>
+          <div class="likert-opt" onclick="pickLikert(this,'lik21b',5)">5</div>
+        </div>
+      </div>
+      <div class="likert-row" data-lik="lik21c">
+        <span class="likert-label">Self-medication is a safe practice overall.</span>
+        <div class="likert-opts">
+          <div class="likert-opt" onclick="pickLikert(this,'lik21c',1)">1</div>
+          <div class="likert-opt" onclick="pickLikert(this,'lik21c',2)">2</div>
+          <div class="likert-opt" onclick="pickLikert(this,'lik21c',3)">3</div>
+          <div class="likert-opt" onclick="pickLikert(this,'lik21c',4)">4</div>
+          <div class="likert-opt" onclick="pickLikert(this,'lik21c',5)">5</div>
+        </div>
+      </div>
+      <div class="likert-row" data-lik="lik21e">
+        <span class="likert-label">Self-medication saves time and is justified when symptoms are familiar.</span>
+        <div class="likert-opts">
+          <div class="likert-opt" onclick="pickLikert(this,'lik21e',1)">1</div>
+          <div class="likert-opt" onclick="pickLikert(this,'lik21e',2)">2</div>
+          <div class="likert-opt" onclick="pickLikert(this,'lik21e',3)">3</div>
+          <div class="likert-opt" onclick="pickLikert(this,'lik21e',4)">4</div>
+          <div class="likert-opt" onclick="pickLikert(this,'lik21e',5)">5</div>
+        </div>
+      </div>
+      <div class="likert-row" data-lik="lik21d">
+        <span class="likert-label">Medical training has made me better at self-medicating responsibly.</span>
+        <div class="likert-opts">
+          <div class="likert-opt" onclick="pickLikert(this,'lik21d',1)">1</div>
+          <div class="likert-opt" onclick="pickLikert(this,'lik21d',2)">2</div>
+          <div class="likert-opt" onclick="pickLikert(this,'lik21d',3)">3</div>
+          <div class="likert-opt" onclick="pickLikert(this,'lik21d',4)">4</div>
+          <div class="likert-opt" onclick="pickLikert(this,'lik21d',5)">5</div>
+        </div>
+      </div>
+    </div>
+    <div class="likert-legend"><span>Strongly Disagree</span><span>Strongly Agree</span></div>
+    <div class="err-msg">Please rate all five attitude statements.</div>
+  </div>
+
+  <div class="q-block" id="qb-22">
+    <div class="q-num">Q23</div>
+    <div class="q-text">Have you experienced relief from self-medication? <span class="required">*</span></div>
+    <div class="options-grid">
+      <label class="opt-pill" onclick="pickRadio(this,'q22')"><span class="ind"></span>Yes<input type="radio" name="q22" value="Yes"></label>
+      <label class="opt-pill" onclick="pickRadio(this,'q22')"><span class="ind"></span>No<input type="radio" name="q22" value="No"></label>
+    </div>
+    <div class="err-msg">Please answer this question.</div>
+  </div>
+
+  <div class="q-block" id="qb-23">
+    <div class="q-num">Q24</div>
+    <div class="q-text">Are you aware of potential risks associated with self-medication? <span class="required">*</span></div>
+    <div class="options-grid">
+      <label class="opt-pill" onclick="pickRadio(this,'q23')"><span class="ind"></span>Yes<input type="radio" name="q23" value="Yes"></label>
+      <label class="opt-pill" onclick="pickRadio(this,'q23')"><span class="ind"></span>No<input type="radio" name="q23" value="No"></label>
+    </div>
+    <div class="err-msg">Please answer this question.</div>
+  </div>
+
+  <div class="q-block" id="qb-24">
+    <div class="q-num">Q25</div>
+    <div class="q-text">Possible risks you recognise <span style="color:var(--slate);font-weight:400">(select all that apply)</span></div>
+    <div class="q-hint">✔ You may select more than one option.</div>
+    <div class="options-grid">
+      <label class="opt-pill cb" onclick="pickCheck(this);return false;"><span class="ind"></span>Incorrect diagnosis and treatment<input type="checkbox" name="q24" value="Incorrect diagnosis"></label>
+      <label class="opt-pill cb" onclick="pickCheck(this);return false;"><span class="ind"></span>Drug interactions<input type="checkbox" name="q24" value="Drug interactions"></label>
+      <label class="opt-pill cb" onclick="pickCheck(this);return false;"><span class="ind"></span>Antibiotic resistance<input type="checkbox" name="q24" value="Antibiotic resistance"></label>
+      <label class="opt-pill cb" onclick="pickCheck(this);return false;"><span class="ind"></span>Masking of serious diseases<input type="checkbox" name="q24" value="Masking diseases"></label>
+      <label class="opt-pill cb" onclick="pickCheck(this);return false;"><span class="ind"></span>Adverse drug reactions<input type="checkbox" name="q24" value="Adverse drug reactions"></label>
+      <label class="opt-pill cb" onclick="pickCheck(this);return false;"><span class="ind"></span>Dependence or overdose<input type="checkbox" name="q24" value="Dependence/overdose"></label>
+      <label class="opt-pill cb" onclick="pickCheck(this);return false;"><span class="ind"></span>Use of counterfeit / spurious (fake) medicines<input type="checkbox" name="q24" value="Counterfeit medicines"></label>
+      <label class="opt-pill cb none-opt" onclick="noneOfAbove(this,'q24');return false;"><span class="ind"></span>None of the above<input type="checkbox" name="q24" value="None of the above"></label>
+    </div>
+  </div>
+
+  <!-- Personally experienced risks (NEW) -->
+  <div class="q-block" id="qb-25">
+    <div class="q-num">Q26</div>
+    <div class="q-text">Which of the above risks have you <em>personally experienced</em> due to self-medication? <span style="color:var(--slate);font-weight:400">(select all that apply)</span></div>
+    <div class="q-hint">✔ Select any that you have actually experienced — not just those you are aware of.</div>
+    <div class="options-grid">
+      <label class="opt-pill cb" onclick="pickCheck(this);return false;"><span class="ind"></span>Incorrect diagnosis and treatment<input type="checkbox" name="q25" value="Incorrect diagnosis"></label>
+      <label class="opt-pill cb" onclick="pickCheck(this);return false;"><span class="ind"></span>Drug interactions<input type="checkbox" name="q25" value="Drug interactions"></label>
+      <label class="opt-pill cb" onclick="pickCheck(this);return false;"><span class="ind"></span>Antibiotic resistance<input type="checkbox" name="q25" value="Antibiotic resistance"></label>
+      <label class="opt-pill cb" onclick="pickCheck(this);return false;"><span class="ind"></span>Masking of serious diseases<input type="checkbox" name="q25" value="Masking diseases"></label>
+      <label class="opt-pill cb" onclick="pickCheck(this);return false;"><span class="ind"></span>Adverse drug reactions (e.g. rash, nausea, dizziness)<input type="checkbox" name="q25" value="Adverse drug reactions"></label>
+      <label class="opt-pill cb" onclick="pickCheck(this);return false;"><span class="ind"></span>Dependence or overdose<input type="checkbox" name="q25" value="Dependence/overdose"></label>
+      <label class="opt-pill cb none-opt" onclick="noneOfAbove(this,'q25');return false;"><span class="ind"></span>None of the above<input type="checkbox" name="q25" value="None"></label>
+    </div>
+  </div>
+
+  <!-- ADR reporting follow-up (NEW) -->
+  <div class="q-block" id="qb-26">
+    <div class="q-num">Q27</div>
+    <div class="q-text">Have you ever experienced an adverse drug reaction (ADR) from self-medication? <span class="required">*</span></div>
+    <div class="options-grid">
+      <label class="opt-pill" onclick="pickRadio(this,'q26');toggleSub('q26','Yes','sub-q26a')"><span class="ind"></span>Yes<input type="radio" name="q26" value="Yes"></label>
+      <label class="opt-pill" onclick="pickRadio(this,'q26');toggleSub('q26','Yes','sub-q26a')"><span class="ind"></span>No<input type="radio" name="q26" value="No"></label>
+    </div>
+    <div class="sub-q" id="sub-q26a">
+      <div class="q-text">If yes, did you report it to a healthcare professional or pharmacovigilance program?</div>
+      <div class="options-grid">
+        <label class="opt-pill" onclick="pickRadio(this,'q26a')"><span class="ind"></span>Yes, I reported it<input type="radio" name="q26a" value="Yes reported"></label>
+        <label class="opt-pill" onclick="pickRadio(this,'q26a')"><span class="ind"></span>No, I did not report it<input type="radio" name="q26a" value="No not reported"></label>
+      </div>
+    </div>
+    <div class="err-msg">Please answer this question.</div>
+  </div>
+
+  <div class="q-block" id="qb-27">
+    <div class="q-num">Q28</div>
+    <div class="q-text">Are you aware of pharmacovigilance and ADR reporting programs? <span class="required">*</span></div>
+    <div class="options-grid">
+      <label class="opt-pill" onclick="pickRadio(this,'q27')"><span class="ind"></span>Yes<input type="radio" name="q27" value="Yes"></label>
+      <label class="opt-pill" onclick="pickRadio(this,'q27')"><span class="ind"></span>No<input type="radio" name="q27" value="No"></label>
+    </div>
+    <div class="err-msg">Please answer this question.</div>
+  </div>
+
+  <div class="nav-row">
+    <button class="btn btn-ghost" onclick="goPrev('D','C')">← Back</button>
+    <button class="btn btn-primary" onclick="goNext('D','E')">Next: Digital Health →</button>
+  </div>
+</div>
+
+<!-- ─── SECTION E ─── -->
+<div class="section-card" id="sec-E">
+  <div class="section-head">
+    <div class="section-icon ic-e">📱</div>
+    <div>
+      <div class="section-label">Section E</div>
+      <div class="section-title">Digital Health Variables</div>
+    </div>
+  </div>
+
+  <!-- Q28 NEW (from document Q28): Medical apps for drug information with frequency -->
+  <div class="q-block" id="qb-28new">
+    <div class="q-num">Q29</div>
+    <div class="q-text">Do you use medical apps (e.g., Medscape, MIMS, 1mg) for drug information? <span class="required">*</span></div>
+    <div class="options-grid">
+      <label class="opt-pill" onclick="pickRadio(this,'q28med')"><span class="ind"></span>Yes — frequently<input type="radio" name="q28med" value="Yes - frequently"></label>
+      <label class="opt-pill" onclick="pickRadio(this,'q28med')"><span class="ind"></span>Yes — occasionally<input type="radio" name="q28med" value="Yes - occasionally"></label>
+      <label class="opt-pill" onclick="pickRadio(this,'q28med')"><span class="ind"></span>No<input type="radio" name="q28med" value="No"></label>
+    </div>
+    <div class="err-msg">Please answer this question.</div>
+  </div>
+
+  <!-- Frequency of digital tool use (NEW) -->
+  <div class="q-block" id="qb-29">
+    <div class="q-num">Q30</div>
+    <div class="q-text">How frequently do you use digital health tools (apps, websites) for health-related decisions? <span class="required">*</span></div>
+    <div class="options-grid">
+      <label class="opt-pill" onclick="pickRadio(this,'q29')"><span class="ind"></span>Daily<input type="radio" name="q29" value="Daily"></label>
+      <label class="opt-pill" onclick="pickRadio(this,'q29')"><span class="ind"></span>Weekly<input type="radio" name="q29" value="Weekly"></label>
+      <label class="opt-pill" onclick="pickRadio(this,'q29')"><span class="ind"></span>Rarely<input type="radio" name="q29" value="Rarely"></label>
+      <label class="opt-pill" onclick="pickRadio(this,'q29')"><span class="ind"></span>Never<input type="radio" name="q29" value="Never"></label>
+    </div>
+    <div class="err-msg">Please answer this question.</div>
+  </div>
+
+  <div class="q-block" id="qb-30">
+    <div class="q-num">Q31</div>
+    <div class="q-text">Do you search symptoms on online platforms for drug information? <span class="required">*</span></div>
+    <div class="options-grid">
+      <label class="opt-pill" onclick="pickRadio(this,'q30')"><span class="ind"></span>Yes<input type="radio" name="q30" value="Yes"></label>
+      <label class="opt-pill" onclick="pickRadio(this,'q30')"><span class="ind"></span>No<input type="radio" name="q30" value="No"></label>
+    </div>
+    <div class="err-msg">Please answer this question.</div>
+  </div>
+
+  <!-- Trusted sources — shown always (not conditional) -->
+  <div class="q-block" id="qb-31">
+    <div class="q-num">Q32</div>
+    <div class="q-text">Which online sources do you trust most for health/drug information? <span style="color:var(--slate);font-weight:400">(select all that apply)</span></div>
+    <div class="q-hint">✔ You may select more than one option.</div>
+    <div class="options-grid">
+      <label class="opt-pill cb" onclick="pickCheck(this);return false;"><span class="ind"></span>Health websites (WebMD, Mayo Clinic, etc.)<input type="checkbox" name="q31" value="Health websites"></label>
+      <label class="opt-pill cb" onclick="pickCheck(this);return false;"><span class="ind"></span>Medical journals / PubMed<input type="checkbox" name="q31" value="Medical journals"></label>
+      <label class="opt-pill cb" onclick="pickCheck(this);return false;"><span class="ind"></span>AI-driven health apps<input type="checkbox" name="q31" value="AI health apps"></label>
+      <label class="opt-pill cb" onclick="pickCheck(this);return false;"><span class="ind"></span>Chatbots (ChatGPT)<input type="checkbox" name="q31" value="Chatbots (ChatGPT)"></label>
+      <label class="opt-pill cb" onclick="pickCheck(this);return false;"><span class="ind"></span>Social media groups<input type="checkbox" name="q31" value="Social media groups"></label>
+      <label class="opt-pill cb" onclick="pickCheck(this);return false;"><span class="ind"></span>YouTube videos<input type="checkbox" name="q31" value="YouTube videos"></label>
+      <label class="opt-pill cb" onclick="pickCheck(this);return false;"><span class="ind"></span>I don't use online sources<input type="checkbox" name="q31" value="None"></label>
+    </div>
+  </div>
+
+  <!-- Online medicine purchase without prescription (NEW) -->
+  <div class="q-block" id="qb-32">
+    <div class="q-num">Q33</div>
+    <div class="q-text">Have you ever purchased medicines online without a prescription? <span class="required">*</span></div>
+    <div class="options-grid">
+      <label class="opt-pill" onclick="pickRadio(this,'q32')"><span class="ind"></span>Yes<input type="radio" name="q32" value="Yes"></label>
+      <label class="opt-pill" onclick="pickRadio(this,'q32')"><span class="ind"></span>No<input type="radio" name="q32" value="No"></label>
+    </div>
+    <div class="err-msg">Please answer this question.</div>
+  </div>
+
+  <div class="nav-row">
+    <button class="btn btn-ghost" onclick="goPrev('E','D')">← Back</button>
+    <div class="privacy-note">🔒 Responses stored securely</div>
+    <button class="btn btn-submit" onclick="submitForm()">✓ Submit Survey</button>
+  </div>
+</div>
+
+</div><!-- /form-wrap -->
+
+<!-- ── SUCCESS SCREEN ── -->
+<div id="success-screen">
+  <div class="success-icon">✓</div>
+  <h2>Thank You!</h2>
+  <p>Your response has been recorded successfully. We sincerely appreciate the time and care you have taken to participate in this study. Your contribution plays a meaningful role in advancing evidence-based research on safe medication practices among medical students.</p>
+  <div class="response-id" id="resp-id"></div>
+  <div class="resp-count" id="resp-count"></div>
+</div>
+
+<!-- ── DATA VIEWER PANEL ── -->
+<div id="data-viewer">
+  <div class="dv-box">
+    <div class="dv-header">
+      <div>
+        <div style="font-family:var(--mono);font-size:0.68rem;color:var(--teal);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px">🔬 Researcher Panel</div>
+        <h3 style="font-family:var(--serif);font-size:1.4rem;margin-bottom:4px;color:var(--text)">All Collected Responses</h3>
+        <div style="font-size:0.8rem;color:var(--slate)" id="dv-count">Loading…</div>
+      </div>
+      <button class="btn btn-ghost" onclick="hideDataViewer()">✕ Close</button>
+    </div>
+
+    <div class="info-box">
+      <h4>📋 How to get your data into Excel</h4>
+      <b>Step 1:</b> Click <b>"Copy All as CSV"</b> below.<br>
+      <b>Step 2:</b> Open <b>Microsoft Excel</b> → new blank sheet → click cell A1 → press <b>Ctrl + V</b> to paste.<br>
+      <b>Step 3:</b> Excel will ask about delimiters — choose <b>Comma</b> → click OK. All responses appear as a clean table.<br>
+      <b>OR</b> — Open <b>Google Sheets</b> → new sheet → click A1 → <b>Ctrl + V</b>. It auto-formats instantly, no extra steps.<br>
+      <span style="color:var(--slate);font-size:0.79rem">☁ Data is stored in <b>Supabase cloud</b> — accessible from any device using this file.</span>
+    </div>
+
+    <div class="dv-actions">
+      <button class="btn btn-primary" id="copy-btn" onclick="copyAllCSV()" style="font-size:0.82rem;padding:10px 20px">
+        📋 Copy All as CSV
+      </button>
+      <button class="btn btn-ghost" style="font-size:0.82rem;padding:10px 18px;color:var(--rose);border-color:rgba(220,38,38,0.3)" onclick="clearAll()">
+        🗑 Clear All Data
+      </button>
+      <span style="align-self:center;font-family:var(--mono);font-size:0.72rem;color:var(--slate)" id="dv-count2"></span>
+    </div>
+
+    <div id="csv-fallback">
+      <p>📌 Select all text below → Copy (Ctrl+A then Ctrl+C) → Paste into Excel:</p>
+      <textarea id="csv-text" readonly onclick="this.select()"></textarea>
+    </div>
+
+    <div class="dv-table-wrap" id="dv-table-wrap">
+      <div style="text-align:center;padding:40px;color:var(--slate)">Loading…</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ SCRIPTS ══════════ -->
+<script>
+// ── SUPABASE CLIENT ──────────────────────────────────────
+const SUPABASE_URL  = 'https://emccnzyexutkfsdcatko.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVtY2NuenlleHV0a2ZzZGNhdGtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk4NjUwNzksImV4cCI6MjA5NTQ0MTA3OX0.-L2cz2tfO2J_zV_bBkNvj4T3BzmUKa8kJ6xv9c2Opuc';
+// NOTE: The CDN registers itself as window.supabase (a var).
+// Declaring another `const supabase` in the same scope causes a re-declaration SyntaxError.
+// We use `db` as the client variable name to avoid that clash.
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+// ── STORAGE BACKUP ENGINE (RESTORED) ──────────────────────
+function saveResponse(data){
+  try{
+    const all = getAll();
+    all.push(data);
+    localStorage.setItem('medriskai_v6_responses', JSON.stringify(all));
+  }catch(e){ console.error('Storage error', e); }
+}
+function getAll(){
+  try{ return JSON.parse(localStorage.getItem('medriskai_v6_responses')||'[]'); }
+  catch(e){ return []; }
+}
+
+const SECTIONS = ['A','B','C','D','E'];
+
+// PSS state
+const pssScores = {pss1:null,pss2:null,pss3:null,pss4:null};
+// Likert state
+const likertVals = {lik21a:null,lik21b:null,lik21c:null,lik21e:null,lik21d:null};
+
+// ── MAP COLLECTED DATA → SUPABASE ROW ───────────────────
+function toSupabaseRow(data, riskResult){
+  return {
+    timestamp:                          data['Timestamp']                           || null,
+    response_id:                        data['ResponseID']                          || null,
+    a0_register_number:                 data['A0_Register_Number']                  || null,
+    a0_register_email:                  data['A0_Register_Email']                   || null,
+    a1_year_of_study:                   data['A1_Year_of_Study']                    || null,
+    a2_age_group:                       data['A2_Age_Group']                        || null,
+    a3_gender:                          data['A3_Gender']                           || null,
+    a4_residence:                       data['A4_Residence']                        || null,
+    a5_academic_performance:            data['A5_Academic_Performance']             || null,
+    a6_healthcare_family:               data['A6_Healthcare_Family']                || null,
+    b7_selfmed_past6months:             data['B7_SelfMed_Past6Months']              || null,
+    b7a_frequency:                      data['B7a_Frequency']                       || null,
+    b8_duration_without_doctor:         data['B8_Duration_Without_Doctor']          || null,
+    b9_formal_drug_education:           data['B9_Formal_Drug_Education']            || null,
+    b10_frequency_selfmed:              data['B10_Frequency_SelfMed']               || null,
+    b11_reasons:                        data['B11_Reasons']                         || null,
+    b12_med_types:                      data['B12_Med_Types']                       || null,
+    b13_antibiotic_course_completion:   data['B13_Antibiotic_Course_Completion']    || null,
+    b14_medication_sources:             data['B14_Medication_Sources']              || null,
+    b15_checked_info_source:            data['B15_Checked_Info_Source']             || null,
+    b15a_info_sources_specified:        data['B15a_Info_Sources_Specified']         || null,
+    b16_source_check_frequency:         data['B16_Source_Check_Frequency']          || null,
+    b16a_source_specified:              data['B16a_Source_Specified']               || null,
+    c15_pss4_q1_unexpected:             data['C15_PSS4_Q1_Unexpected']  != null ? parseInt(data['C15_PSS4_Q1_Unexpected'])   : null,
+    c15_pss4_q2_control:                data['C15_PSS4_Q2_Control']     != null ? parseInt(data['C15_PSS4_Q2_Control'])      : null,
+    c15_pss4_q3_nervous:                data['C15_PSS4_Q3_Nervous']     != null ? parseInt(data['C15_PSS4_Q3_Nervous'])      : null,
+    c15_pss4_q4_difficulties:           data['C15_PSS4_Q4_Difficulties']!= null ? parseInt(data['C15_PSS4_Q4_Difficulties']) : null,
+    c15_pss4_total:                     data['C15_PSS4_Total']          != null ? parseInt(data['C15_PSS4_Total'])           : null,
+    c15_pss4_category:                  data['C15_PSS4_Category']                   || null,
+    c16_stress_influences_selfmed:      data['C16_Stress_Influences_SelfMed']       || null,
+    c17_selfmed_for_stress_anxiety:     data['C17_SelfMed_For_Stress_Anxiety']      || null,
+    c17a_how_often:                     data['C17a_How_Often']                      || null,
+    c18_selfmed_for_sleep:              data['C18_SelfMed_For_Sleep']               || null,
+    c19_peer_influence:                 data['C19_Peer_Influence']                  || null,
+    c20_social_media_med_decisions:     data['C20_Social_Media_Med_Decisions']      || null,
+    d21_attitude_minor_ailments:        data['D21_Attitude_Minor_Ailments']    != null ? parseInt(data['D21_Attitude_Minor_Ailments'])      : null,
+    d21_attitude_confidence:            data['D21_Attitude_Confidence']        != null ? parseInt(data['D21_Attitude_Confidence'])           : null,
+    d21_attitude_safe_overall:          data['D21_Attitude_Safe_Overall']      != null ? parseInt(data['D21_Attitude_Safe_Overall'])         : null,
+    d21_attitude_saves_time_justified:  data['D21_Attitude_Saves_Time_Justified'] != null ? parseInt(data['D21_Attitude_Saves_Time_Justified']) : null,
+    d21_attitude_training_helps:        data['D21_Attitude_Training_Helps']    != null ? parseInt(data['D21_Attitude_Training_Helps'])       : null,
+    d22_experienced_relief:             data['D22_Experienced_Relief']              || null,
+    d23_aware_of_risks:                 data['D23_Aware_of_Risks']                  || null,
+    d24_risks_recognised:               data['D24_Risks_Recognised']                || null,
+    d25_risks_personally_experienced:   data['D25_Risks_Personally_Experienced']    || null,
+    d26_experienced_adr:                data['D26_Experienced_ADR']                 || null,
+    d26a_adr_reported:                  data['D26a_ADR_Reported']                   || null,
+    d27_aware_pharmacovigilance:        data['D27_Aware_Pharmacovigilance']         || null,
+    e30_uses_medical_apps:              data['E30_Uses_Medical_Apps']               || null,
+    e31_digital_tool_frequency:         data['E31_Digital_Tool_Frequency']          || null,
+    e32_searches_symptoms_online:       data['E32_Searches_Symptoms_Online']        || null,
+    e33_trusted_online_sources:         data['E33_Trusted_Online_Sources']          || null,
+    e34_online_purchase_no_rx:          data['E34_Online_Purchase_No_Rx']           || null,
+    // ── FIXED: use correct keys returned by Python backend ──────────────────
+    risk_score:           riskResult ? (parseInt(riskResult.risk_score ?? riskResult.score) || null) : null,
+    risk_label:           riskResult ? (riskResult.risk_label || riskResult.label || null) : null,
+    risk_probs:           riskResult ? (riskResult.probs  || null) : null,
+    risk_factors:         riskResult ? (Array.isArray(riskResult.factors)         ? riskResult.factors.join(' | ')         : (riskResult.factors         || null)) : null,
+    risk_insights:        riskResult ? (Array.isArray(riskResult.insights)        ? riskResult.insights.join(' | ')        : (riskResult.insights        || null)) : null,
+    risk_recommendations: riskResult ? (Array.isArray(riskResult.recommendations) ? riskResult.recommendations.join(' | ') : (riskResult.recommendations || null)) : null,
+    risk_method:          riskResult ? (riskResult.method || 'XGBoost Model') : null
+  };
+}
+
+// ── SAVE TO SUPABASE ─────────────────────────────────────
+async function saveToSupabase(data, riskResult){
+  const row = toSupabaseRow(data, riskResult);
+  const { error } = await db.from('survey_responses').insert([row]);
+  if(error) throw error;
+}
+
+// ── COUNTER (reads from Supabase) ────────────────────────
+async function updateCounter(){
+  try{
+    const { count, error } = await db
+      .from('survey_responses')
+      .select('*', { count: 'exact', head: true });
+    const n = error ? 0 : (count || 0);
+    const el = document.getElementById('resp-counter');
+    if(el) el.textContent = n + ' response' + (n !== 1 ? 's' : '') + ' stored';
+  }catch(e){ /* silently ignore network errors on load */ }
+}
+updateCounter();
+
+// ── PSS-4 ─────────────────────────────────────────────────
+function pickPSS(el, key, val){
+  // Deselect siblings in same row
+  const row = el.closest('tr');
+  row.querySelectorAll('.pss-opt').forEach(o=>o.classList.remove('selected'));
+  el.classList.add('selected');
+  pssScores[key] = val;
+  updatePSSScore();
+  document.getElementById('qb-15').classList.remove('has-error');
+}
+function updatePSSScore(){
+  const vals = Object.values(pssScores);
+  const allSet = vals.every(v=>v!==null);
+  const scoreEl = document.getElementById('pss-score-val');
+  if(allSet){
+    const total = vals.reduce((a,b)=>a+b,0);
+    scoreEl.textContent = total;
+    if(total<=5) scoreEl.style.color='var(--emerald)';
+    else if(total<=10) scoreEl.style.color='var(--amber)';
+    else scoreEl.style.color='var(--rose)';
+  } else {
+    scoreEl.textContent = '—';
+    scoreEl.style.color='var(--teal)';
+  }
+}
+function getPSSTotal(){
+  const vals = Object.values(pssScores);
+  if(vals.every(v=>v!==null)) return vals.reduce((a,b)=>a+b,0);
+  return null;
+}
+
+// ── LIKERT ───────────────────────────────────────────────
+function pickLikert(el, key, val){
+  const row = el.closest('.likert-row');
+  row.querySelectorAll('.likert-opt').forEach(o=>o.classList.remove('selected'));
+  el.classList.add('selected');
+  likertVals[key] = val;
+  document.getElementById('qb-21').classList.remove('has-error');
+}
+
+// ── FORM INTERACTIONS ──────────────────────────────────
+function pickRadio(el, name){
+  document.querySelectorAll(`input[name="${name}"]`).forEach(i=>{
+    i.closest('.opt-pill').classList.remove('selected');
+  });
+  el.classList.add('selected');
+  el.querySelector('input').checked = true;
+  el.closest('.q-block').classList.remove('has-error');
+}
+
+function pickCheck(el){
+  const cb  = el.querySelector('input[type="checkbox"]');
+  const now = !el.classList.contains('selected');
+  el.classList.toggle('selected', now);
+  cb.checked = now;
+}
+
+function toggleSub(name, showVal, subId){
+  const val = document.querySelector(`input[name="${name}"]:checked`)?.value;
+  const sub = document.getElementById(subId);
+  if(!sub) return;
+  sub.classList.toggle('show', val === showVal);
+}
+
+function hideSub(subId){
+  const sub = document.getElementById(subId);
+  if(sub) sub.classList.remove('show');
+}
+
+function showSub(subId){
+  const sub = document.getElementById(subId);
+  if(sub) sub.classList.add('show');
+}
+
+function clearErr(blockId){
+  document.getElementById(blockId)?.classList.remove('has-error');
+}
+
+// ── NAVIGATION ───────────────────────────────────────────
+function goNext(from, to){ if(validateSection(from)) showSection(to); }
+function goPrev(from, to){ showSection(to); }
+
+function showSection(sec){
+  SECTIONS.forEach(s=> document.getElementById('sec-'+s).classList.remove('active'));
+  document.getElementById('sec-'+sec).classList.add('active');
+  const idx = SECTIONS.indexOf(sec);
+  const pct = Math.round((idx/SECTIONS.length)*100);
+  document.getElementById('prog-bar').style.width = pct+'%';
+  document.getElementById('prog-pct').textContent  = pct+'% complete';
+  document.getElementById('sec-cur').textContent   = sec;
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ── VALIDATION ───────────────────────────────────────────
+const REQ = {
+  A:['q1','q2','q3','q4','q5','q6'],
+  B:['q7','q8','q9','q10freq','q14src','q14','q12'],
+  C:['q16','q17','q18','q19','q20'],
+  D:['q22','q23','q26','q27'],
+  E:['q28med','q29','q30','q32']
+};
+
+function validateSection(sec){
+  let ok = true;
+
+  if(sec === 'A'){
+    const sid = document.getElementById('student-id').value.trim();
+    const sidBlock = document.getElementById('qb-sid');
+    if(!sid){ sidBlock.classList.add('has-error'); ok=false; }
+    else { sidBlock.classList.remove('has-error'); }
+
+    const email = document.getElementById('student-email').value.trim();
+    const emailBlock = document.getElementById('qb-email');
+    const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    if(!emailValid){ emailBlock.classList.add('has-error'); ok=false; }
+    else { emailBlock.classList.remove('has-error'); }
+  }
+
+  // Handle PSS-4 validation on section C
+  if(sec === 'C'){
+    const pssTotal = getPSSTotal();
+    const pssBlock = document.getElementById('qb-15');
+    if(pssTotal === null){ pssBlock.classList.add('has-error'); ok=false; }
+    else { pssBlock.classList.remove('has-error'); }
+  }
+
+  // Likert validation on section D
+  if(sec === 'D'){
+    const likBlock = document.getElementById('qb-21');
+    const allLik = Object.values(likertVals).every(v=>v!==null);
+    if(!allLik){ likBlock.classList.add('has-error'); ok=false; }
+    else { likBlock.classList.remove('has-error'); }
+  }
+
+  // Map name to block id for special cases
+  const nameToBlock = {
+    'q10freq': 'qb-10new',
+    'q14src':  'qb-14new',
+    'q28med':  'qb-28new'
+  };
+
+  (REQ[sec]||[]).forEach(name=>{
+    const checked = document.querySelector(`input[name="${name}"]:checked`);
+    const num = name.replace('q','');
+    const blockId = nameToBlock[name] || ('qb-'+num);
+    const block = document.getElementById(blockId);
+    if(!block) return;
+    if(!checked){ block.classList.add('has-error'); ok=false; }
+    else { block.classList.remove('has-error'); }
+  });
+
+  if(!ok) document.querySelector('.has-error')?.scrollIntoView({behavior:'smooth',block:'center'});
+  return ok;
+}
+
+// ── NONE-OF-ABOVE LOGIC ──────────────────────────────────
+function noneOfAbove(el, name){
+  const grid = el.closest('.options-grid');
+  const allPills = grid.querySelectorAll('.opt-pill.cb');
+  const noneInput = el.querySelector('input');
+  const isNowSelected = !el.classList.contains('selected');
+
+  if(isNowSelected){
+    // Select "None" and deselect + disable all others
+    allPills.forEach(pill => {
+      if(pill === el) return;
+      const inp = pill.querySelector('input');
+      inp.checked = false;
+      pill.classList.remove('selected');
+      pill.classList.add('disabled-opt');
+      pill.style.opacity = '0.4';
+      pill.style.pointerEvents = 'none';
+    });
+    el.classList.add('selected');
+    noneInput.checked = true;
+  } else {
+    // Deselect "None" and re-enable all others
+    allPills.forEach(pill => {
+      if(pill === el) return;
+      pill.classList.remove('disabled-opt');
+      pill.style.opacity = '';
+      pill.style.pointerEvents = '';
+    });
+    el.classList.remove('selected');
+    noneInput.checked = false;
+  }
+}
+
+
+function R(name){ return document.querySelector(`input[name="${name}"]:checked`)?.value||''; }
+function C(name){ return [...document.querySelectorAll(`input[name="${name}"]:checked`)].map(i=>i.value).join(' | ')||''; }
+
+function collectData(){
+  const pssTotal = getPSSTotal();
+  const pssCategory = pssTotal===null?'':pssTotal<=5?'Low':pssTotal<=10?'Moderate':'High';
+  return {
+    'Timestamp'                           : new Date().toLocaleString('en-IN'),
+    'ResponseID'                          : 'R-'+Date.now().toString(36).toUpperCase(),
+    'A0_Register_Number'                  : document.getElementById('student-id').value.trim(),
+    'A0_Register_Email'                   : document.getElementById('student-email').value.trim(),
+    'A0_Participant_Code'                 : document.getElementById('student-id').value.trim(),
+    'A1_Year_of_Study'                    : R('q1'),
+    'A2_Age_Group'                        : R('q2'),
+    'A3_Gender'                           : R('q3'),
+    'A4_Residence'                        : R('q4'),
+    'A5_Academic_Performance'             : R('q5'),
+    'A6_Healthcare_Family'                : R('q6'),
+    'B7_SelfMed_Past6Months'             : R('q7'),
+    'B7a_Frequency'                       : R('q7a')||(R('q7')==='No'?'N/A':''),
+    'B8_Duration_Without_Doctor'          : R('q8'),
+    'B9_Formal_Drug_Education'            : R('q9'),
+    'B10_Frequency_SelfMed'               : R('q10freq'),
+    'B11_Reasons'                         : C('q10'),
+    'B12_Med_Types'                       : C('q11'),
+    'B13_Antibiotic_Course_Completion'    : R('q12'),
+    'B14_Medication_Sources'              : C('q13'),
+    'B15_Checked_Info_Source'             : R('q14src'),
+    'B15a_Info_Sources_Specified'         : C('q14srcs'),
+    'B16_Source_Check_Frequency'          : R('q14'),
+    'B16a_Source_Specified'               : document.getElementById('q14-specify')?.value||'',
+    'C15_PSS4_Q1_Unexpected'             : pssScores.pss1 !== null ? String(pssScores.pss1) : '',
+    'C15_PSS4_Q2_Control'                : pssScores.pss2 !== null ? String(pssScores.pss2) : '',
+    'C15_PSS4_Q3_Nervous'                : pssScores.pss3 !== null ? String(pssScores.pss3) : '',
+    'C15_PSS4_Q4_Difficulties'           : pssScores.pss4 !== null ? String(pssScores.pss4) : '',
+    'C15_PSS4_Total'                      : pssTotal !== null ? String(pssTotal) : '',
+    'C15_PSS4_Category'                   : pssCategory,
+    'C16_Stress_Influences_SelfMed'       : R('q16'),
+    'C17_SelfMed_For_Stress_Anxiety'      : R('q17'),
+    'C17a_How_Often'                      : R('q17a')||(R('q17')==='No'?'N/A':''),
+    'C18_SelfMed_For_Sleep'               : R('q18'),
+    'C19_Peer_Influence'                  : R('q19'),
+    'C20_Social_Media_Med_Decisions'      : R('q20'),
+    'D21_Attitude_Minor_Ailments'         : likertVals.lik21a !== null ? String(likertVals.lik21a) : '',
+    'D21_Attitude_Confidence'             : likertVals.lik21b !== null ? String(likertVals.lik21b) : '',
+    'D21_Attitude_Safe_Overall'           : likertVals.lik21c !== null ? String(likertVals.lik21c) : '',
+    'D21_Attitude_Saves_Time_Justified'   : likertVals.lik21e !== null ? String(likertVals.lik21e) : '',
+    'D21_Attitude_Training_Helps'         : likertVals.lik21d !== null ? String(likertVals.lik21d) : '',
+    'D22_Experienced_Relief'              : R('q22'),
+    'D23_Aware_of_Risks'                  : R('q23'),
+    'D24_Risks_Recognised'                : C('q24'),
+    'D25_Risks_Personally_Experienced'    : C('q25'),
+    'D26_Experienced_ADR'                 : R('q26'),
+    'D26a_ADR_Reported'                   : R('q26a')||(R('q26')==='No'?'N/A':''),
+    'D27_Aware_Pharmacovigilance'         : R('q27'),
+    'E30_Uses_Medical_Apps'               : R('q28med'),
+    'E31_Digital_Tool_Frequency'          : R('q29'),
+    'E32_Searches_Symptoms_Online'        : R('q30'),
+    'E33_Trusted_Online_Sources'          : C('q31'),
+    'E34_Online_Purchase_No_Rx'           : R('q32')
+  };
+}
+
+// ── SUBMIT ────────────────────────────────────────────────
+function submitForm()
+{
+  if(!validateSection('E')) return;
+  const data = collectData();
+  document.getElementById('loading').classList.add('show');
+
+  // Relative URL works locally (Flask :5000) AND on Render automatically
+  fetch('/predict', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  })
+  .then(res => {
+    if (!res.ok) throw new Error('Backend returned HTTP ' + res.status);
+    return res.json();
+  })
+  .then(mlResult => {
+    if (mlResult.status === 'error') throw new Error(mlResult.message);
+    return mlResult;
+  })
+  .catch(err => {
+    // Backend offline / error → rule-based fallback so data is ALWAYS saved
+    console.warn('ML backend unavailable, using rule-based fallback:', err.message);
+    return fallbackRiskScore(data);
+  })
+  .then(result => {
+    // Normalise keys so Python response & JS fallback work identically downstream
+    const label = result.risk_label || result.label || 'Moderate Risk';
+    const score = (result.risk_score != null ? result.risk_score : result.score) || 50;
+    result.risk_label = label;
+    result.risk_score = score;
+    data['Risk_Label'] = label;
+    data['Risk_Score']  = score;
+    data['Model_Confidence'] = (result.confidence != null ? (result.confidence * 100).toFixed(1) : '--') + '%';
+    return saveToSupabase(data, result).then(() => result);
+  })
+  .then(result => {
+    saveResponse(data);
+    updateCounter();
+    document.getElementById('loading').classList.remove('show');
+    showRiskDashboard(data, result);
+  })
+  .catch(err => {
+    document.getElementById('loading').classList.remove('show');
+    console.error('Submission error:', err);
+    alert('⚠️ Error saving response:\n' + err.message);
+  });
+}
+function appendPredictionToUI(label, confidence) {
+  const targetBox = document.getElementById('success-screen');
+  document.getElementById('ml-evaluation-metric-node')?.remove();
+
+  // Safe fallback if label is missing
+  const activeLabel = label || "Moderate Risk";
+
+  const element = document.createElement('div');
+  element.id = "ml-evaluation-metric-node";
+  element.style.cssText = "margin: 20px auto; padding: 15px; border-radius: 12px; background: #FFF; border: 1px solid var(--border); max-width: 480px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);";
+  
+  let badgeColor = "var(--emerald)";
+  if (activeLabel.toLowerCase().includes("high")) badgeColor = "var(--rose)";
+  else if (activeLabel.toLowerCase().includes("mod") || activeLabel.toLowerCase().includes("med")) badgeColor = "var(--amber)";
+
+  element.innerHTML = `
+    <h4 style="font-family: var(--mono); font-size: 0.75rem; color: var(--slate); text-transform: uppercase; margin-bottom: 5px;">🤖 Real-Time AI Behavior Assessment</h4>
+    <p style="font-size: 1.1rem; font-weight: 700; color: ${badgeColor}; margin-bottom: 4px;">Risk Category: ${activeLabel}</p>
+    <p style="font-family: var(--mono); font-size: 0.72rem; color: var(--slate);">Model Confidence: ${confidence}</p>
+  `;
+  targetBox.insertBefore(element, document.getElementById('resp-id'));
+}
+
+function showSuccess(data){
+  ['header','researcher-bar'].forEach(c=>{
+    document.querySelector('.'+c).style.display='none';
+  });
+  document.getElementById('progress-shell').style.display='none';
+  document.getElementById('main-form').style.display='none';
+  document.getElementById('success-screen').classList.add('show');
+  document.getElementById('resp-id').textContent = 'Response ID: ' + data.ResponseID;
+  const n = getAll().length;
+  document.getElementById('resp-count').textContent = '✓ ' + n + ' total response'+(n!==1?'s':'')+' stored in this browser';
+}
+
+function showRiskDashboard(data, result){
+  ['header','researcher-bar'].forEach(c=>{
+    const el = document.querySelector('.'+c);
+    if(el) el.style.display='none';
+  });
+  document.getElementById('progress-shell').style.display='none';
+  document.getElementById('main-form').style.display='none';
+  document.getElementById('risk-dashboard').classList.add('show');
+  renderDashboard(data, result);
+}
+
+function startNew(){
+  window.location.reload();
+}
+
+// ── DATA VIEWER ──────────────────────────────────────────
+async function showDataViewer(){
+  document.getElementById('data-viewer').classList.add('show');
+  await renderTable();
+}
+function hideDataViewer(){
+  document.getElementById('data-viewer').classList.remove('show');
+}
+
+async function renderTable(){
+  const countEl  = document.getElementById('dv-count');
+  const countEl2 = document.getElementById('dv-count2');
+  const wrap     = document.getElementById('dv-table-wrap');
+  wrap.innerHTML = '<div style="text-align:center;padding:48px;color:var(--slate)">Loading from Supabase…</div>';
+
+  const { data: all, error } = await db
+    .from('survey_responses')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if(error){
+    wrap.innerHTML = '<div style="text-align:center;padding:48px;color:var(--rose);font-size:0.85rem">⚠ Error loading data: ' + error.message + '</div>';
+    return;
+  }
+
+  const msg = (all ? all.length : 0) + ' response' + ((all&&all.length!==1)?'s':'') + ' collected';
+  if(countEl)  countEl.textContent  = msg;
+  if(countEl2) countEl2.textContent = msg;
+
+  if(!all || !all.length){
+    wrap.innerHTML = '<div style="text-align:center;padding:48px;color:var(--slate);font-size:0.88rem">No responses yet. Ask students to fill the survey.</div>';
+    return;
+  }
+
+  // Show all columns except internal supabase ones
+  const skip = new Set(['id','created_at','risk_probs']);
+  const keys = Object.keys(all[0]).filter(k => !skip.has(k));
+  let html = '<table class="dv-table"><thead><tr><th>#</th>';
+  keys.forEach(k => html += '<th>' + k.replace(/_/g,' ') + '</th>');
+  html += '</tr></thead><tbody>';
+  all.forEach((row, i) => {
+    html += '<tr><td>' + (i+1) + '</td>';
+    keys.forEach(k => {
+      const v = String(row[k] != null ? row[k] : '—');
+      html += '<td title="' + v.replace(/"/g,"'") + '">' + (v.length > 28 ? v.slice(0,26)+'…' : v) + '</td>';
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+}
+
+async function copyAllCSV(){
+  const btn = document.getElementById('copy-btn');
+  btn.textContent = '⏳ Fetching…';
+
+  const { data: all, error } = await db
+    .from('survey_responses')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if(error || !all || !all.length){
+    btn.textContent = '📋 Copy All as CSV';
+    alert(error ? 'Error: ' + error.message : 'No responses to export yet.');
+    return;
+  }
+
+  const skip = new Set(['risk_probs']);
+  const keys = Object.keys(all[0]).filter(k => !skip.has(k));
+  const rows = all.map(r => keys.map(k => '"' + String(r[k] != null ? r[k] : '').replace(/"/g,'""') + '"').join(','));
+  const csv  = keys.join(',') + '\n' + rows.join('\n');
+
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(csv).then(() => {
+      btn.textContent = '✓ Copied! Paste into Excel';
+      btn.style.background = 'var(--emerald)';
+      setTimeout(() => { btn.textContent = '📋 Copy All as CSV'; btn.style.background = ''; }, 3000);
+    }).catch(() => showFallback(csv));
+  } else { showFallback(csv); }
+}
+
+function showFallback(csv){
+  const fb = document.getElementById('csv-fallback');
+  const ta = document.getElementById('csv-text');
+  fb.style.display = 'block';
+  ta.value = csv;
+  ta.focus();
+  ta.select();
+}
+
+async function clearAll(){
+  if(confirm('⚠ This will permanently delete ALL responses from Supabase.\n\nMake sure you have exported them first!\n\nContinue?')){
+    const { error } = await db.from('survey_responses').delete().neq('id', 0);
+    if(error){ alert('Error deleting: ' + error.message); return; }
+    await updateCounter();
+    await renderTable();
+  }
+}
+
+// ── E-CONSENT ─────────────────────────────────────────────
+let consentGiven = false;
+function toggleConsent(){
+  consentGiven = !consentGiven;
+  const row = document.getElementById('consent-row');
+  const btn = document.getElementById('consent-btn');
+  const err = document.getElementById('consent-err');
+  row.classList.toggle('checked', consentGiven);
+  btn.classList.toggle('enabled', consentGiven);
+  if(consentGiven) err.classList.remove('show');
+}
+function proceedToSurvey(){
+  if(!consentGiven){
+    document.getElementById('consent-err').classList.add('show');
+    return;
+  }
+  document.getElementById('consent-screen').style.display = 'none';
+  document.getElementById('progress-shell').style.display = 'block';
+  document.getElementById('main-form').style.display = 'block';
+}
+
+// ══════════════ RISK PREDICTION ENGINE ══════════════
+
+function fallbackRiskScore(data){
+  // Rule-based scoring as fallback
+  let score = 0;
+  const factors = [];
+
+  // PSS stress
+  const pss = parseInt(data.C15_PSS4_Total)||0;
+  if(pss>=11){score+=20;factors.push('High stress level (PSS-4 score '+pss+')');}
+  else if(pss>=6){score+=10;factors.push('Moderate stress level');}
+
+  // Self-medication frequency
+  if(data.B10_Frequency_SelfMed==='Daily'){score+=18;factors.push('Daily self-medication');}
+  else if(data.B10_Frequency_SelfMed==='Weekly'){score+=12;factors.push('Weekly self-medication');}
+  else if(data.B10_Frequency_SelfMed==='Monthly'){score+=6;}
+
+  // Duration without doctor
+  if(data.B8_Duration_Without_Doctor==='>5 days'){score+=14;factors.push('Extended self-medication >5 days');}
+  else if(data.B8_Duration_Without_Doctor==='3-5 days'){score+=8;}
+
+  // Antibiotics not completed
+  if(data.B13_Antibiotic_Course_Completion==='No stopped early'){score+=12;factors.push('Antibiotic course not completed');}
+
+  // ADR experienced
+  if(data.D26_Experienced_ADR==='Yes'){score+=10;factors.push('Adverse drug reaction experienced');}
+
+  // Social media influence
+  if(data.C20_Social_Media_Med_Decisions==='Yes'){score+=8;factors.push('Social media influences decisions');}
+
+  // Online purchase without Rx
+  if(data.E34_Online_Purchase_No_Rx==='Yes'){score+=10;factors.push('Online purchase without prescription');}
+
+  // Peer influence
+  if(data.C19_Peer_Influence==='Yes used'){score+=6;factors.push('Acts on peer medication advice');}
+
+  // Sleep self-med
+  if(data.C18_SelfMed_For_Sleep==='Yes'){score+=6;factors.push('Self-medicates for sleep');}
+
+  // Attitude scores (high overconfidence = risk)
+  const conf = parseInt(data.D21_Attitude_Confidence)||3;
+  const safe = parseInt(data.D21_Attitude_Safe_Overall)||3;
+  if(conf+safe>=8){score+=6;factors.push('High overconfidence in self-medication safety');}
+
+  // Info checking
+  if(data.B16_Source_Check_Frequency==='Never'){score+=8;factors.push('Never checks reliable sources');}
+  else if(data.B16_Source_Check_Frequency==='Rarely'){score+=4;}
+
+  score = Math.min(score, 100);
+  const label = score>=60?'High Risk':score>=30?'Moderate Risk':'Low Risk';
+  const probs = label==='High Risk'?{low:0.1,moderate:0.25,high:0.65}:
+                label==='Moderate Risk'?{low:0.2,moderate:0.6,high:0.2}:
+                {low:0.7,moderate:0.25,high:0.05};
+  return {score, label, probs, factors, method:'rule-based'};
+}
+
+async function runRiskPrediction(data){
+  const prompt = buildRiskPrompt(data);
+  const res = await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      model:'claude-sonnet-4-20250514',
+      max_tokens:1000,
+      system: `You are a clinical pharmacology AI model trained on medication risk data from medical students. 
+Analyse survey responses and return ONLY a valid JSON object with these exact fields:
+{
+  "score": <integer 0-100>,
+  "label": "<Low Risk|Moderate Risk|High Risk>",
+  "probs": {"low": <0-1>, "moderate": <0-1>, "high": <0-1>},
+  "factors": ["<key risk factor 1>", "<key risk factor 2>", ...],
+  "insights": ["<clinical insight 1>", "<insight 2>", "<insight 3>"],
+  "recommendations": ["<actionable rec 1>", "<rec 2>", "<rec 3>", "<rec 4>"]
+}
+Base risk on: stress level (PSS-4), frequency/duration of self-medication, antibiotic misuse, ADR history, social media influence, peer influence, overconfidence, info-checking behaviour, sleep self-medication, online Rx purchase. Probs must sum to 1.0. No markdown, no preamble.`,
+      messages:[{role:'user',content:prompt}]
+    })
+  });
+  const json = await res.json();
+  const text = json.content.filter(b=>b.type==='text').map(b=>b.text).join('');
+  const clean = text.replace(/```json|```/g,'').trim();
+  const parsed = JSON.parse(clean);
+  parsed.method = 'AI';
+  return parsed;
+}
+
+function buildRiskPrompt(data){
+  return `Predict medication risk for this medical student:
+
+DEMOGRAPHICS: Year=${data.A1_Year_of_Study}, Age=${data.A2_Age_Group}, Gender=${data.A3_Gender}, Residence=${data.A4_Residence}, Academic=${data.A5_Academic_Performance}, Healthcare family=${data.A6_Healthcare_Family}
+
+SELF-MEDICATION: Practiced=${data.B7_SelfMed_Past6Months}, Frequency=${data.B7a_Frequency}, Duration without doctor=${data.B8_Duration_Without_Doctor}, Drug education=${data.B9_Formal_Drug_Education}, SM frequency=${data.B10_Frequency_SelfMed}
+Reasons: ${data.B11_Reasons}
+Med types used: ${data.B12_Med_Types}
+Antibiotic course completion: ${data.B13_Antibiotic_Course_Completion}
+Sources: ${data.B14_Medication_Sources}
+Checks info before SM: ${data.B15_Checked_Info_Source}
+Info check frequency: ${data.B16_Source_Check_Frequency}
+
+PSYCHOLOGICAL: PSS-4 Total=${data.C15_PSS4_Total} (${data.C15_PSS4_Category}), Stress influences SM=${data.C16_Stress_Influences_SelfMed}, SM for stress/anxiety=${data.C17_SelfMed_For_Stress_Anxiety} (${data.C17a_How_Often}), SM for sleep=${data.C18_SelfMed_For_Sleep}, Peer influence=${data.C19_Peer_Influence}, Social media decisions=${data.C20_Social_Media_Med_Decisions}
+
+ATTITUDES (1-5): Acceptable for minor ailments=${data.D21_Attitude_Minor_Ailments}, Confidence=${data.D21_Attitude_Confidence}, Safe overall=${data.D21_Attitude_Safe_Overall}, Saves time=${data.D21_Attitude_Saves_Time_Justified}, Training helps=${data.D21_Attitude_Training_Helps}
+Experienced relief=${data.D22_Experienced_Relief}, Aware of risks=${data.D23_Aware_of_Risks}
+Risks recognised: ${data.D24_Risks_Recognised}
+Personally experienced: ${data.D25_Risks_Personally_Experienced}
+ADR experienced=${data.D26_Experienced_ADR} (Reported=${data.D26a_ADR_Reported})
+Aware of pharmacovigilance=${data.D27_Aware_Pharmacovigilance}
+
+DIGITAL: Uses medical apps=${data.E30_Uses_Medical_Apps}, Digital tool frequency=${data.E31_Digital_Tool_Frequency}, Searches symptoms online=${data.E32_Searches_Symptoms_Online}
+Trusted sources: ${data.E33_Trusted_Online_Sources}
+Online purchase without Rx=${data.E34_Online_Purchase_No_Rx}`;
+}
+
+// ══════════════ DOMAIN SCORING ══════════════
+function computeDomains(data){
+  const pss = parseInt(data.C15_PSS4_Total)||0;
+  const pssScore = Math.round((pss/16)*100);
+
+  // Behaviour score
+  let beh = 0;
+  if(data.B7_SelfMed_Past6Months==='Yes') beh+=20;
+  if(data.B10_Frequency_SelfMed==='Daily') beh+=30;
+  else if(data.B10_Frequency_SelfMed==='Weekly') beh+=20;
+  else if(data.B10_Frequency_SelfMed==='Monthly') beh+=10;
+  if(data.B8_Duration_Without_Doctor==='>5 days') beh+=20;
+  else if(data.B8_Duration_Without_Doctor==='3-5 days') beh+=10;
+  if(data.B13_Antibiotic_Course_Completion==='No stopped early') beh+=30;
+  beh=Math.min(beh,100);
+
+  // Attitude score (higher = more permissive = higher risk)
+  const attScores = [data.D21_Attitude_Minor_Ailments, data.D21_Attitude_Confidence, data.D21_Attitude_Safe_Overall, data.D21_Attitude_Saves_Time_Justified].map(v=>parseInt(v)||3);
+  const attScore = Math.round(((attScores.reduce((a,b)=>a+b,0)/20)*100));
+
+  // Social/digital risk
+  let soc = 0;
+  if(data.C19_Peer_Influence==='Yes used') soc+=25;
+  if(data.C20_Social_Media_Med_Decisions==='Yes') soc+=25;
+  if(data.E34_Online_Purchase_No_Rx==='Yes') soc+=25;
+  if(data.C18_SelfMed_For_Sleep==='Yes') soc+=15;
+  if(data.C17_SelfMed_For_Stress_Anxiety==='Yes') soc+=10;
+  soc=Math.min(soc,100);
+
+  // Awareness score (inverted – low awareness = high risk)
+  let aw = 0;
+  if(data.D23_Aware_of_Risks==='Yes') aw+=30;
+  if(data.D27_Aware_Pharmacovigilance==='Yes') aw+=20;
+  if(data.B9_Formal_Drug_Education==='Yes') aw+=20;
+  if(data.B16_Source_Check_Frequency==='Always') aw+=30;
+  else if(data.B16_Source_Check_Frequency==='Sometimes') aw+=15;
+  const awRisk = 100-Math.min(aw,100);
+
+  return [
+    {icon:'💊',label:'SECTION B',name:'Self-Med Behaviour',score:beh,tag:beh>=60?'High':beh>=30?'Moderate':'Low'},
+    {icon:'🧠',label:'SECTION C',name:'Psychological Stress',score:pssScore,tag:pssScore>=68?'High':pssScore>=37?'Moderate':'Low'},
+    {icon:'💭',label:'SECTION D',name:'Attitude & Overconfidence',score:attScore,tag:attScore>=60?'High':attScore>=35?'Moderate':'Low'},
+    {icon:'📱',label:'SECTION C/E',name:'Social & Digital Risk',score:soc,tag:soc>=60?'High':soc>=30?'Moderate':'Low'},
+    {icon:'🔍',label:'SECTION D',name:'Awareness Deficit',score:awRisk,tag:awRisk>=60?'High':awRisk>=30?'Moderate':'Low'},
+    {icon:'⚠️',label:'SECTION D',name:'ADR / Adverse Events',score:data.D26_Experienced_ADR==='Yes'?70:0,tag:data.D26_Experienced_ADR==='Yes'?'High':'Low'},
+  ];
+}
+
+// ══════════════ RENDER DASHBOARD ══════════════
+function renderDashboard(data, result){
+  // Extract either from custom result objects or explicit backend response parameters
+  const label = result.risk_label || result.label || "Moderate Risk";
+  const probs = result.probs || null;
+  const factors = result.factors || [];
+
+// Use risk_score from backend (preferred) or fall back to label-based estimate
+  let finalScore = result.risk_score ?? result.score;
+  if (finalScore == null || isNaN(finalScore)) {
+    if (label.toLowerCase().includes("high")) finalScore = 75;
+    else if (label.toLowerCase().includes("mod") || label.toLowerCase().includes("med")) finalScore = 50;
+    else finalScore = 22;
+  }
+  finalScore = Math.max(1, Math.min(100, Math.round(finalScore)));
+
+  // Hero card
+  const lvl = document.getElementById('rdb-level');
+  lvl.textContent = label;
+  lvl.className = 'rdb-risk-level ' + (label.includes('High')?'high':label.includes('Moderate')?'moderate':'low');
+
+  const descs = {
+    'Low Risk':'Your responses indicate relatively safe self-medication practices. You demonstrate good awareness of risks and generally responsible behaviour.',
+    'Moderate Risk':'Your responses suggest some concerning patterns that warrant attention. Targeted interventions could meaningfully reduce your risk profile.',
+    'High Risk':'Your responses reveal several high-risk behaviours that require immediate attention. Engaging with pharmacology guidance and clinical mentors is strongly recommended.'
+  };
+  document.getElementById('rdb-desc').textContent = descs[label]||descs['Moderate Risk'];
+  document.getElementById('rdb-conf').textContent = '🎯 AI Confidence: Low ' + Math.round((probs?.low||0)*100) + '% · Moderate ' + Math.round((probs?.moderate||0)*100) + '% · High ' + Math.round((probs?.high||0)*100) + '%';
+  document.getElementById('rdb-score').textContent = finalScore;
+
+  // Animate gauge using calculated parameters
+  setTimeout(()=>{
+    const arc = document.getElementById('gauge-arc');
+    const circumference = 251.2;
+    const offset = circumference - (finalScore/100)*circumference;
+    arc.style.strokeDashoffset = offset;
+    const color = finalScore>=60?'#DC2626':finalScore>=30?'#D97706':'#059669';
+    arc.style.stroke = color;
+    document.getElementById('rdb-score').style.color = color;
+  },200);
+
+  // Domain cards
+  const domains = computeDomains(data);
+  const domContainer = document.getElementById('rdb-domains');
+  domContainer.innerHTML = domains.map(d => {
+    const barColor = d.tag==='High'?'#DC2626':d.tag==='Moderate'?'#D97706':'#059669';
+    return `<div class="rdb-domain-card">
+      <div class="rdc-icon">${d.icon}</div>
+      <div class="rdc-label">${d.label}</div>
+      <div class="rdc-name">${d.name}</div>
+      <div class="rdc-bar-track"><div class="rdc-bar-fill" style="width:${d.score}%;background:${barColor}"></div></div>
+      <div class="rdc-score-row">
+        <span class="rdc-score" style="color:${barColor}">${d.score}<span style="font-size:0.65rem;color:var(--slate)">/100</span></span>
+        <span class="rdc-tag tag-${d.tag.toLowerCase()}">${d.tag} Risk</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  // AI insights
+  if(result.insights && result.insights.length){
+    document.getElementById('rdb-insights').innerHTML = result.insights.map(i=>
+      `<div class="insight-item">💡 ${i}</div>`).join('');
+  } else if(factors && factors.length){
+    document.getElementById('rdb-insights').innerHTML = factors.map(f=>
+      `<div class="insight-item">⚠️ ${f}</div>`).join('');
+  }
+
+  // Recommendations
+  if(result.recommendations && result.recommendations.length){
+    document.getElementById('rdb-recs').innerHTML = result.recommendations.map((r,i)=>
+      `<div class="rec-item"><span class="rec-num">${i+1}</span><span>${r}</span></div>`).join('');
+  } else {
+    const defaults = {
+      'High Risk':[
+        'Consult your college pharmacology faculty immediately about current self-medication practices.',
+        'Avoid purchasing medicines online without a valid prescription from a registered practitioner.',
+        'Complete all antibiotic courses as prescribed to prevent antimicrobial resistance.',
+        'Report any adverse drug reactions through official pharmacovigilance channels (PvPI).'
+      ],
+      'Moderate Risk':[
+        'Review the WHO guidelines on rational drug use and responsible self-medication.',
+        'Always verify drug information via validated sources such as pharmacist advice or textbooks.',
+        'Reduce frequency of self-medication and consult a doctor for recurring symptoms.',
+        'Build awareness of drug interactions and ADR reporting procedures.'
+      ],
+      'Low Risk':[
+        'Maintain your habit of checking reliable sources before any self-medication.',
+        'Continue to complete antibiotic courses fully and avoid abrupt discontinuation.',
+        'Share safe self-medication awareness with peers to help reduce collective risk.',
+        'Stay updated on pharmacovigilance programs and report any observed ADRs.'
+      ]
+    };
+    const recs = defaults[label]||defaults['Moderate Risk'];
+    document.getElementById('rdb-recs').innerHTML = recs.map((r,i)=>
+      `<div class="rec-item"><span class="rec-num">${i+1}</span><span>${r}</span></div>`).join('');
+  }
+
+  // Summary table
+  const summaryFields = [
+    ['Year of Study','A1_Year_of_Study'],['Age Group','A2_Age_Group'],['Gender','A3_Gender'],
+    ['Residence','A4_Residence'],['Academic Performance','A5_Academic_Performance'],
+    ['Healthcare Family','A6_Healthcare_Family'],['Self-Medicated (6mo)','B7_SelfMed_Past6Months'],
+    ['SM Frequency','B7a_Frequency'],['Duration Without Doctor','B8_Duration_Without_Doctor'],
+    ['Drug Education','B9_Formal_Drug_Education'],['SM Practice Frequency','B10_Frequency_SelfMed'],
+    ['Antibiotic Completion','B13_Antibiotic_Course_Completion'],
+    ['Info Source Check','B16_Source_Check_Frequency'],
+    ['PSS-4 Total','C15_PSS4_Total'],['PSS-4 Category','C15_PSS4_Category'],
+    ['Stress → SM','C16_Stress_Influences_SelfMed'],['SM for Stress/Anxiety','C17_SelfMed_For_Stress_Anxiety'],
+    ['SM for Sleep','C18_SelfMed_For_Sleep'],['Peer Influence','C19_Peer_Influence'],
+    ['Social Media Decisions','C20_Social_Media_Med_Decisions'],
+    ['Confidence (Attitude)','D21_Attitude_Confidence'],['Safe Overall (Attitude)','D21_Attitude_Safe_Overall'],
+    ['Experienced Relief','D22_Experienced_Relief'],['Aware of Risks','D23_Aware_of_Risks'],
+    ['ADR Experienced','D26_Experienced_ADR'],['Aware of Pharmacovigilance','D27_Aware_Pharmacovigilance'],
+    ['Uses Medical Apps','E30_Uses_Medical_Apps'],['Digital Tool Frequency','E31_Digital_Tool_Frequency'],
+    ['Searches Symptoms Online','E32_Searches_Symptoms_Online'],['Online Purchase No Rx','E34_Online_Purchase_No_Rx'],
+  ];
+  let tbl = '<div class="rdb-summary-table-inner"><table class="rdb-tbl"><thead><tr><th>Question / Variable</th><th>Domain</th><th>Your Answer</th></tr></thead><tbody>';
+  const domainMap = {A:'Demographics',B:'Self-Medication',C:'Psychological',D:'Awareness & Attitude',E:'Digital Health'};
+  summaryFields.forEach(([label,key])=>{
+    const dom = domainMap[key[0]]||'';
+    const val = data[key]||'—';
+    tbl += `<tr><td>${label}</td><td style="color:var(--teal);font-family:var(--mono);font-size:0.7rem">${dom}</td><td>${val}</td></tr>`;
+  });
+  tbl += '</tbody></table></div>';
+  document.getElementById('rdb-summary-table').innerHTML = tbl;
+
+  // Footer
+  document.getElementById('rdb-resp-id').textContent = 'Response ID: ' + (data.ResponseID||'—');
+}
+
+</script>
+
+<!-- ═══════════ RISK DASHBOARD ═══════════ -->
+<div id="risk-dashboard" class="risk-db">
+  <div class="risk-db-inner">
+    <!-- Header -->
+    <div class="rdb-header">
+      <div class="rdb-logo"><span class="dot"></span>MedRisk AI · Risk Analysis Report</div>
+      <h1 class="rdb-title">Your Medication Risk Profile</h1>
+      <p class="rdb-sub">AI-powered analysis based on your survey responses</p>
+    </div>
+
+    <!-- Main Risk Card -->
+    <div class="rdb-hero" id="rdb-hero">
+      <div class="rdb-hero-left">
+        <div class="rdb-risk-label">RISK CLASSIFICATION</div>
+        <div class="rdb-risk-level" id="rdb-level">—</div>
+        <div class="rdb-risk-desc" id="rdb-desc">Analysing your responses…</div>
+        <div class="rdb-conf" id="rdb-conf"></div>
+      </div>
+      <div class="rdb-hero-right">
+        <div class="rdb-gauge-wrap">
+          <svg class="rdb-gauge" viewBox="0 0 200 120">
+            <path d="M20 100 A80 80 0 0 1 180 100" fill="none" stroke="#E8EDF2" stroke-width="18" stroke-linecap="round"/>
+            <path class="gauge-fill" id="gauge-arc" d="M20 100 A80 80 0 0 1 180 100" fill="none" stroke="#059669" stroke-width="18" stroke-linecap="round" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
+          </svg>
+          <div class="rdb-gauge-score" id="rdb-score">0</div>
+          <div class="rdb-gauge-label">Risk Score / 100</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Domain Cards -->
+    <div class="rdb-grid" id="rdb-domains"></div>
+
+    <!-- AI Insights -->
+    <div class="rdb-insights-card" id="rdb-insights-card">
+      <div class="rdb-section-title">🤖 AI Clinical Insights</div>
+      <div class="rdb-insights-body" id="rdb-insights">
+        <div class="ai-loading"><div class="ai-spinner"></div><span>Generating personalised insights…</span></div>
+      </div>
+    </div>
+
+    <!-- Recommendations -->
+    <div class="rdb-recs-card" id="rdb-recs-card">
+      <div class="rdb-section-title">📋 Personalised Recommendations</div>
+      <div class="rdb-recs-body" id="rdb-recs">
+        <div class="ai-loading"><div class="ai-spinner"></div><span>Building recommendations…</span></div>
+      </div>
+    </div>
+
+    <!-- Response Summary Table -->
+    <div class="rdb-summary-card">
+      <div class="rdb-section-title">📊 Your Response Summary</div>
+      <div id="rdb-summary-table"></div>
+    </div>
+
+    <!-- Footer actions -->
+    <div class="rdb-footer">
+      <div class="rdb-resp-id" id="rdb-resp-id"></div>
+      <div class="rdb-footer-btns">
+        <button class="btn btn-ghost" onclick="window.print()">🖨 Print Report</button>
+        <button class="btn btn-primary" onclick="location.reload()">+ New Survey</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
