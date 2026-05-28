@@ -262,31 +262,30 @@ def predict():
                 for form_key, model_key in FIELD_MAP.items():
                     remapped[model_key] = str(form_data.get(form_key, 'Unknown'))
 
-                # Step 2 — Build a DataFrame with exactly the features the model expects
-                # Any feature not in FIELD_MAP is filled with 'Unknown'
-                row = {}
+                # Step 2 — Build a numeric row directly (avoids pandas dtype conflicts)
+                # Each feature is encoded to an integer immediately — no string DataFrame
+                numeric_row = []
                 for col in feature_names:
-                    row[col] = remapped.get(col, 'Unknown')
-
-                processed_df = pd.DataFrame([row])
-
-                # Step 3 — Encode categorical columns using saved label encoders
-                for col in processed_df.columns:
+                    val = remapped.get(col, 'Unknown')
                     if col in label_encoders:
-                        le  = label_encoders[col]
-                        val = str(processed_df.loc[0, col])
+                        le = label_encoders[col]
                         if val in le.classes_:
-                            processed_df.loc[0, col] = le.transform([val])[0]
+                            numeric_row.append(int(le.transform([val])[0]))
                         elif 'Unknown' in le.classes_:
-                            processed_df.loc[0, col] = le.transform(['Unknown'])[0]
+                            numeric_row.append(int(le.transform(['Unknown'])[0]))
                         else:
-                            # Unseen value — use most frequent class (index 0)
-                            processed_df.loc[0, col] = 0
+                            numeric_row.append(0)
                     else:
-                        processed_df[col] = pd.to_numeric(processed_df[col], errors='coerce').fillna(0)
+                        # Numeric column — convert directly
+                        try:
+                            numeric_row.append(float(val))
+                        except (ValueError, TypeError):
+                            numeric_row.append(0.0)
 
-                # Step 4 — Scale and predict
-                X_scaled      = scaler.transform(processed_df.astype(float))
+                # Step 3 — Scale and predict using the clean numeric array
+                X_input  = np.array([numeric_row], dtype=float)
+                X_scaled = scaler.transform(X_input)
+                # Step 4 — Predict
                 pred_encoded  = int(model.predict(X_scaled)[0])
                 probabilities = model.predict_proba(X_scaled)[0]
 
